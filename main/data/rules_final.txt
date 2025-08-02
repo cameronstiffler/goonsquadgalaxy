@@ -1,0 +1,211 @@
+
+
+GOON SQUAD GALAXY – FINAL RULES
+
+OVERVIEW
+In Cosmic Horror in Goon Squad Galaxy, each player commands a squad of GOONs—grotesque monsters, alien machines, and freakish leaders—battling for survival across a ruined cosmos.
+ 
+The key resource is Wind (🌀), which represents fatigue, exposure to cosmic forces, or the strain of action. Wind is tracked physically by rotating each GOON card 90° counterclockwise per Wind it has.
+ 
+At the start of your turn, each GOON card unwinds: rotate 90° clockwise to remove 1 Wind (🌀).
+ 
+When a GOON reaches 4 Wind (🌀🌀🌀🌀), it is destroyed and sent to the discard pile. There are no separate health points—Wind is everything: your cost, your limit, your death.
+
+QUICKSTART
+- Each player uses a 60-card deck.
+- Your deck includes a Squad Leader, Squad GOONs, and Basic GOONs.
+- You lose if your deck runs out or your Squad Leader is destroyed.
+- Squad Leader begins in play. Other GOONs must be deployed.
+- All characters are GOONs. However, the Squad Leader is not treated as a GOON for targeting unless no other GOONs are in play.
+
+TURN STRUCTURE
+1. Draw Phase
+- Draw 1 card from your deck.
+ 
+2. Unwind Phase
+- Rotate each GOON 90° clockwise to remove 1 Wind.
+ 
+3. Action Phase
+- Use any GOON abilities you can pay Wind for.
+- Abilities may apply Wind
+ 
+4. Deploy Phase
+- Deploy new GOONs from hand by spending Wind.
+- GOONs enter play at 0 Wind.
+- any goons can contribute wind for deploying new goons
+ 
+5. End Phase
+- Resolve any end-of-turn effects.
+
+WIND SYSTEM
+
+
+All units (GOONs) are destroyed at 🌀4.
+
+
+Units gain Wind (🌀) when paying to deploy other GOONs or activating abilities.
+
+
+Wind counts are tracked per GOON.
+
+
+Wind unwinds at the start of each turn: 🌀🌀🌀 → 🌀🌀 → 🌀 etc.
+
+
+UNIT TYPES
+
+
+SL = Squad Leader (1 per deck, always starts in play)
+
+
+SG = Squad GOON (limit 1 in play at a time)
+
+
+BG = Basic GOON (unlimited)
+
+
+Titans = Special units with steep costs, untargetable, immune
+
+
+DEPLOYMENT RULES
+
+
+SLs start the game in play with 🌀0.
+
+
+SGs can only be deployed by SLs.
+
+
+Any GOON (SL, SG, BG) can pay Wind to summon another GOON.
+
+
+GOONs enter play with 🌀0 (not stunned or delayed).
+
+
+WIND SPENDING
+
+
+Units with 🌀1–3 may spend Wind to take actions.
+
+
+A unit destroyed by reaching 🌀4 still completes its action.
+
+
+Units may never exceed 🌀4.
+
+
+PROTECTION RULES
+
+
+If any Basic GOON (BG) is in play, Squad Leaders (SLs) cannot be attacked.
+
+
+If any Squad GOON (SG) is in play, Squad Leaders (SLs) cannot be attacked.
+
+
+BGs do NOT protect SGs.
+
+
+Titans never protect or block.
+
+
+ABILITY LIMITS
+
+
+A GOON may only activate one ability per turn.
+
+
+BGs and SGs may have multiple abilities, but may only use one per round.
+
+
+HAND & DRAW RULES
+
+
+Players draw 1 card at the start of their turn.
+
+
+Players lose if they cannot draw a card.
+
+
+CARD LIMITS
+
+
+Each deck has 60 cards.
+
+
+Max 4 copies of any card (except Titans = 1).
+
+
+SGs are limited to 1 in play per player.
+
+
+Duplicate SGs drawn while one is in play are kept in hand (not discarded).
+
+
+TITANS
+
+
+Cannot be damaged, targeted, stunned, or delayed.
+
+
+Require specific SL in play to summon.
+
+
+Do not protect other units or block.
+
+
+DEATH & DISCARD
+
+
+Most GOONs that die go to the discard pile (Dead Pool) shared by all players.
+
+
+Some GOONs, when destroyed, are Retired (removed from the game permanently).
+
+
+GOONs deployed from the Dead Pool by cards like Technomancer are Retired instead of discarded.
+
+
+Specific cards (e.g., Kriegsgheist) state they are Retired on destruction and do not return to Dead Pool.
+
+
+ICONS & CLARIFICATIONS
+
+
+🌀 = Wind
+
+
+❌ = Resistance (1 icon = 1 resist)
+
+
+[d] = Damage (1 icon = 1 damage)
+
+
+💰 = Wind payment indicator
+
+
+SLs may spend 💰🌀🌀 to draw 1 card (once per turn, only if at 🌀0)
+
+
+MISC
+
+
+
+All attacks are listed as abilities.
+
+
+Overwatch and positional rules do not exist.
+
+
+LOCKED SAFEGUARD:
+
+
+Squad Leaders may not spend Wind if it would raise them to 🌀4.
+
+
+Any such action will be blocked and reported before it happens.
+
+
+
+Feel free to copy, save, or print as you need.
+
