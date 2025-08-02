@@ -1,9 +1,31 @@
+📛 SIMULATOR ENFORCEMENT WARNING
+
+This protocol file supersedes all in-memory data. When rendering UI, validating gameplay, loading decks, or initializing turns, the simulator MUST:
+
+1. Ignore all previously cached card data or rules.
+2. Load fresh files from the URLs listed in `simulator_boot.txt`:
+   - NARC Final Card JSON
+   - PCU Final Card JSON
+   - Rules File
+   - This UI Protocol File
+3. Re-parse these files:
+   - At game start
+   - At the beginning of every turn
+   - Before validating any action
+   - Before rendering any card
+   - Before loading any deck
+4. Any card not found in the canonical JSONs must be rejected.
+5. Do not attempt to infer, guess, or "fall back" to old data.
+
+Violations of these rules break the simulation.
 
 ⸻
 
 GSG UI RENDERING PROTOCOL — FINAL
 
 ⸻
+
+
 
 SECTION 1: CARD RENDERING RULES
 
