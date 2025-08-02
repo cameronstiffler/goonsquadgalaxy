@@ -130,7 +130,8 @@ Each turn alternates between players and follows this order:
 	•	Clickable abilities cost wind (➔ icons)
 	•	Once used, ability is marked used_ability: true and disabled
 	4.	Deploy Phase
-	•	Deploy any number of goons by paying wind from other goons on your field
+  •	Deploy any number of goons by paying wind from other goons on your field
+	•	Once first goon is deployed in deploy phase, none of player's goons may use abilities
 	•	Paying goons gain wind equal to amount paid
 	•	SG deploy rule enforced: Cannot deploy a SG of the same name if already in play
 	•	Cards used from the Dead Pool to pay deploy costs are Retired
@@ -155,6 +156,8 @@ Each turn alternates between players and follows this order:
 	•	Winding SL to 4 → game over
 	•	Using >1 ability per goon per turn → invalid
 	•	Invalid ability use → ignored
+  •	Goon deployed this turn uses ability
+  •	Goon deployed this turn contributes wind towards goon deploy costs
 
 ⸻
 
