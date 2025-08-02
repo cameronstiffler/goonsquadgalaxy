@@ -1,0 +1,346 @@
+[
+    {
+      "name": "Compliance Auditon",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["1w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "LITIGIOUS GRIDLOCK",
+          "cost": ["1w"],
+          "text": "Target goon does not unwind in players next unwind phase"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/auditon.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/auditon.png?raw=true"
+    },
+    {
+      "name": "Bruut Enforcer",
+      "rank": "Squad Goon",
+      "faction": "narc",
+      "deploy_cost": ["4w"],
+      "icons": ["narc", "mechanical","resist","no_unwind"],
+      "requirements": "Player must control 2 Goons with the diamond icon to deploy",
+      "abilities": [
+        {
+          "name": "SLUG",
+          "cost": ["1w"],
+          "text": "2 to target goon"
+        },
+        {
+          "name": "RED WET SPOT",
+          "cost": ["2w"],
+          "text": "Destroy target goon"
+        }
+      ],
+      "notes": ["Player may pay 1 wind to unwind BRUUT Enforcer"],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/bruut.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/bruut.png?raw=true"
+    },
+    {
+      "name": "Buzzkill",
+      "rank": "Squad Goon",
+      "faction": "narc",
+      "deploy_cost": ["3w"],
+      "icons": ["narc", "mechanical","resist"],
+      "abilities": [
+        {
+          "name": "SENTRY MODE",
+          "cost": ["0w"],
+          "text": "Target Goon gains resist until beginning of player's next turn"
+        },
+        {
+          "name": "BLAST",
+          "cost": ["1w"],
+          "text": "Add 2 wind to target goon"
+        },
+        {
+          "name": "DEFENSIVE POSTURE",
+          "cost": ["1w"],
+          "text": "Buzzkill and Killjoy both pay 1 wind and Player's Goons gain Resist until Player's next turn"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/buzzkill.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/buzzkill.png?raw=true"
+    },
+    {
+      "name": "Detainment Probe",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["1w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "SHACKLE BEAM",
+          "cost": ["1w"],
+          "text": "Target Goon may not unwind, act or contribute wind to deploy next turn"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/detainprobe.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/detainprobe.png?raw=true"
+    },
+    {
+      "name": "Marine Marauder",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["3w"],
+      "icons": ["narc", "organic", "mechanical"],
+      "abilities": [
+        {
+          "name": "PRECISION STRIKE",
+          "cost": ["1w"],
+          "text": "Add 1 wind to target Goon"
+        },
+        {
+          "name": "ORDINANCE ARRAY",
+          "cost": ["3w"],
+          "text": "Distribute 3 wind among 3 target Goons"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/marine_marauder.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/marine_marauder.png?raw=true"
+    },
+    {
+      "name": "K-9.0",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["3w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "SCAN FOR VULNERABILITY",
+          "cost": ["2w"],
+          "text": "A Goon may use an ability twice on Goon targeted with SCAN FOR VULNERABILITY"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/k9.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/k9.png?raw=true"
+    },
+    {
+      "name": "Killjoy",
+      "rank": "Squad Goon",
+      "faction": "narc",
+      "deploy_cost": ["3w"],
+      "icons": ["narc", "mechanical","resist"],
+      "abilities": [
+        {
+          "name": "SUBMISSION HOLD",
+          "cost": ["0w"],
+          "text": "Target Goon does not unwind on players next turn"
+        },
+        {
+          "name": "NEUTRALIZE",
+          "cost": ["2w"],
+          "text": "Add 2 wind to target goon"
+        },
+        {
+          "name": "DEFENSIVE POSTURE",
+          "cost": ["1w"],
+          "text": "Buzzkill and Killjoy both pay 1 wind and Player's Goons gain Resist until Player's next turn"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/killjoy.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/killjoy.png?raw=true"
+    },
+    {
+      "name": "Lokar Simmons",
+      "rank": "Squad Leader",
+      "faction": "narc",
+      "deploy_cost": [],
+      "icons": ["narc", "organic","resist"],
+      "abilities": [
+        {
+          "name": "RESOURCEFUL",
+          "cost": ["2w"],
+          "text": "Draw a card"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/lokar.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/lokar.png?raw=true"
+    },
+    {
+      "name": "Dormex Lurker",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["2w"],
+      "icons": ["narc", "mechanical","no_unwind"],
+      "abilities": [
+        {
+          "name": "SELF DESTRUCT",
+          "cost": ["0w"],
+          "text": "Destroy Lurker and add 2 wind to target Goon"
+        },
+        {
+          "name": "REACTIVE MUNITIONS",
+          "cost": ["0w"],
+          "text": "Destroy Goon who destroys Lurker"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/lurker.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/lurker.png?raw=true"
+    },
+    {
+      "name": "MediFlux-1NDS",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["2w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "DORSAL CAVITY RINSE",
+          "cost": ["1w"],
+          "text": "Remove 1 wind from target Goon"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/medi.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/medi.png?raw=true"
+    },
+    {
+      "name": "Task Mistres",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["2w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "BIDE TIME",
+          "cost": ["0w"],
+          "text": "Mistrex gains Resist until beginning of Player's next"
+        },
+        {
+          "name": "TAZING CRACK",
+          "cost": ["1w"],
+          "text": "Target Goon does not unwind during it's next unwind"
+        },
+        {
+          "name": "DOMINATE",
+          "cost": ["2w"],
+          "text": "Use target Goon ability on target of Player's choice. Target Goon pays wind as it would on it's turn"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/mistrex.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mistrex.png?raw=true"
+    },
+    {
+      "name": "Narcstar",
+      "rank": "Titan",
+      "faction": "narc",
+      "deploy_cost": ["6w"],
+      "icons": ["narc"],
+      "abilities": [
+        {
+          "name": "ORBITAL SMITE",
+          "cost": ["1w"],
+          "text": "Destroy target Goon and Retire target from game"
+        },
+        {
+          "name": "MASS SHACKLE",
+          "cost": ["1w"],
+          "text": "Target Player's Goons do not unwind on target Player's next turn"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/narcstar.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/narcstar.png?raw=true"
+    },
+    {
+      "name": "Nob Lobber",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["4w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "SCATTER LOAD",
+          "cost": ["1w"],
+          "text": "1 wind to 2 target Goons"
+        },
+        {
+          "name": "GOON BUSTER",
+          "cost": ["2w"],
+          "text": "Add 3 wind to target Goon"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/noblobber.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/noblobber.png?raw=true"
+    },
+    {
+      "name": "Sausage Droid",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["1w"],
+      "icons": ["narc", "mechanical", "organic"],
+      "abilities": [
+        {
+          "name": "PROCESS",
+          "cost": ["1w", "1m"],
+          "text": "Droid pays 1 wind and Retire 1 Goon with organic from Dead Pool to remove 1 wind from target Goon"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/sasdroid.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/sasdroid.png?raw=true"
+    },
+    {
+      "name": "Sentry Node",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["4w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "AUTOBURST",
+          "cost": ["0w"],
+          "text": "Add 1 wind to target Goon"
+        },
+        {
+          "name": "LEAD LASER",
+          "cost": ["2w"],
+          "text": "Add 2 wind to target Goon"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/sentry.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/sentry.png?raw=true"
+    },
+    {
+      "name": "Shield Array Node",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["2w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "FORTIFICATION NETWORK",
+          "cost": ["0w"],
+          "text": "Player's Goons may not be the target of negative effects while 2 or more Shield Array Nodes are in play"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/shield.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/shield.png?raw=true"
+    },
+    {
+      "name": "Impact Simulant",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["0w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/simulant.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/simulant.png?raw=true"
+    },
+    {
+      "name": "Target Marker Probe",
+      "rank": "Basic Goon",
+      "faction": "narc",
+      "deploy_cost": ["1w"],
+      "icons": ["narc", "mechanical"],
+      "abilities": [
+        {
+          "name": "MARK TARGET",
+          "cost": ["1w"],
+          "text": "When Goon adds wind as damage to targeted Goon, increase wind applied by 1. Nob Lobber and Marine Marauder may forego wind cost when targeting MARKED TARGET and no other Goons. Does not apply to abilities that target multiple Goons"
+        }
+      ],
+      "image_url_mini": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/mini/target.jpg?raw=true",
+      "image_url_full": "https://github.com/cameronstiffler/goonsquadgalaxy/blob/main/card-images/narc/target.png?raw=true"
+    }
+  ]
