@@ -1,0 +1,5 @@
+# GSG CANONICAL SOURCES
+narc_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
+pcu_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
+rules: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/rules_final.txt
+protocols: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/ui_protocols.txt
