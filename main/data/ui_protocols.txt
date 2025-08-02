@@ -1,191 +1,195 @@
 
-**GSG UI RENDERING PROTOCOL — FINAL**
+⸻
 
----
+GSG UI RENDERING PROTOCOL — FINAL
 
-### SECTION 1: CARD RENDERING RULES
+⸻
 
-**1.1. Always verify card data against JSON before rendering**
+SECTION 1: CARD RENDERING RULES
 
-- Load data from final NARC and PCU card JSON files.
-- Match cards by exact `name` field.
-- Use the following fields:
-  - `name`
-  - `rank` (BG, SG, SL)
-  - `deploy_cost` (array of wind costs, render as ➔ per wind)
-  - `image_url_mini` (for field/hand view)
-  - `abilities` (include `name` and `cost`)
-  - `faction`
+1.1. Always verify card data against JSON before rendering
+	•	Load card data from final NARC and PCU card JSON files:
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
+	•	Match cards by exact name field.
+	•	Use the following fields:
+	•	name
+	•	rank (BG, SG, SL)
+	•	deploy_cost (array of wind costs, render as ➔ per wind)
+	•	image_url_mini (for field/hand view)
+	•	abilities (include name and cost)
+	•	icons (mechanical, organic, resist, etc.)
+	•	faction
+	•	wind (integer, 0–4)
+	•	used_ability (boolean)
 
-**1.2. Card Name Display**
+1.2. Card Name Display
+	•	Display card names as bold text
+	•	Card names are clickable links to full-size image (if available)
 
-- Display name as **bold text**
-- Link only the card name text (not icons) to the full-size image
+1.3. Rank Icons
+	•	No icon = Basic Goon (BG)
+	•	🔸 = Squad Goon (SG)
+	•	⭐ = Squad Leader (SL)
 
-**1.3. Rank Icons**
+1.4. Deploy Cost
+	•	Show each wind unit as ➔
+	•	Deploy cost appears next to card in hand or Dead Pool
+	•	Dead Pool cards paid for deploy must also show type (🥩 for organic, ⚙️ for mechanical)
 
-- Use no icon for BG
-- Use ⬦ (yellow diamond) for SG
-- Use ⭐ (yellow star) for SL
+1.5. Abilities
+	•	Always list abilities below card name
+	•	Format: ➔➔ [ABILITY NAME] (1+ arrows to indicate cost)
+	•	Each ability appears on its own line
+	•	Abilities are clickable if available this turn
+	•	Disabled abilities must be hidden or unclickable
 
-**1.4. Deploy Cost**
+1.6. Wind Status
+	•	Wind is shown using red bars: ▮
+	•	Maximum wind is 4 = death
+	•	Cards start with 0 wind
+	•	Place bars beside each card on the field
 
-- Render each wind unit as a single ➔
-- Deploy cost appears next to card in hand (e.g., ➔➔➔)
+1.7. Mini Image Rendering
+	•	Use image_url_mini from JSON
+	•	Align goons side-by-side per faction row
 
-**1.5. Abilities**
+1.8. Squad Leader Deployment
+	•	SLs start the game on field with 0 wind
+	•	SLs are never in hand
+	•	SLs cannot be deployed or redeployed
 
-- Always list abilities beneath the card name
-- Each ability goes on its **own line**
-- Format: ➔ [ABILITY NAME] where the number of arrows matches the cost
-- Abilities are **clickable** links
-  - When clicked, trigger targeting procedure if applicable
-  - Disable or hide if used this turn or blocked by effect
+1.9. Squad Goon Uniqueness
+	•	Players may not have more than 1 copy of the same SG in play
+	•	Duplicate SGs held in hand are not discarded
+	•	Different SGs (e.g., Vex and Krax) may be on field simultaneously
 
-**1.6. Wind Status**
+1.10. Retired Cards
+	•	Any card used to pay a deploy cost from Dead Pool is Retired (permanently removed)
+	•	Goons with “Retired” death effects do not go to the Dead Pool
 
-- Wind is shown using red bars: ▮ per wind unit
-- Maximum: 4 bars (dead)
-- Show adjacent to card in field view
+⸻
 
-**1.7. Mini Image Rendering**
+SECTION 2: TURN AND ACTION FLOW
 
-- Always use `image_url_mini` from card JSON
-- Align cards side-by-side per faction
-- The faction whose turn it is gets second row
+⸻
 
-**1.8. Squad Leader Deployment**
+2.0 Deck-Building Phase (before game starts)
+	•	Each player builds a deck of 60 cards (not including SL)
+	•	Limit 4 copies max of any card
+	•	Titan cards are limited to 1 copy total
+	•	Only 1 SG of a given name may be in play at a time (per player)
+	•	Duplicate SGs drawn while one is on field are kept in hand
 
-- SLs are never in hand
-- They start the game on field with **0 wind**
+⸻
 
-**1.9. Squad Goon Uniqueness**
+2.1 Start of Game
+	•	Load all source files:
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/rules_final.txt
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/ui_protocols.txt
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
+	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
+	•	Each player starts with their SL on field with 0 wind
+	•	Each player draws 6 cards from their deck
 
-- A player may not deploy a second SG of the **same name** if one is already on field
-- Having different SGs (e.g., Vex and Krax) is allowed
+⸻
 
-**1.10. Retired Cards**
+2.2 Turn Structure
 
-- Cards paid for deploy are **Retired** (removed permanently)
-- Dead goons go to **Dead Pool** unless marked "Retired" in their card effect
+Each turn alternates between players and follows this order:
+	1.	Unwind Phase
+	•	All goons on active player’s field reduce wind by 1 (if wind > 0)
+	•	SLs unwind as well unless retired
+	2.	Draw Phase
+	•	Draw 1 card from deck (if not empty)
+	•	Drawn cards must match a card from that faction’s official JSON
+	3.	Ability Phase
+	•	Each goon may use 1 ability per turn
+	•	Clickable abilities cost wind (➔ icons)
+	•	Once used, ability is marked used_ability: true and disabled
+	4.	Deploy Phase
+	•	Deploy any number of goons by paying wind from other goons on your field
+	•	Paying goons gain wind equal to amount paid
+	•	SG deploy rule enforced: Cannot deploy a SG of the same name if already in play
+	•	Cards used from the Dead Pool to pay deploy costs are Retired
+	5.	End Phase
+	•	Resolve lingering effects
+	•	Hand size is unlimited (no discards)
 
----
+⸻
 
-### SECTION 2: TURN & ACTION FLOW
+2.3 Death, Dead Pool, Retirement
+	•	A goon with 4 wind is dead → sent to Dead Pool
+	•	SL with 4 wind = instant game loss
+	•	Cards paid from field = stay in game (wind added to paying goons)
+	•	Cards paid from Dead Pool = Retired
+	•	If a revived goon dies again = Retired
+	•	Retired goons do not return to Dead Pool or deck
 
-**2.1. Start of Game**
+⸻
 
-- Each player begins with their SL in play with 0 wind
-- Each player draws 7 cards from their deck (excluding the SL)
-- No card limit in hand size
+2.4 Illegal Actions
+	•	Attempting to deploy a duplicate SG → invalid (cancelled)
+	•	Winding SL to 4 → game over
+	•	Using >1 ability per goon per turn → invalid
+	•	Invalid ability use → ignored
 
-**2.2. Turn Structure**
-Turns alternate between players. Each turn follows this structure:
+⸻
 
-1. **Unwind Phase**
+SECTION 3: FIELD & HAND DISPLAY
 
-   - All of the active player's goons reduce wind by 1 (if > 0)
-   - SLs also unwind unless destroyed or retired
+3.1 Field Layout
+	•	Two horizontal rows:
+	•	Top = Opponent (non-active)
+	•	Bottom = Active player
+	•	Each card block shows:
+	•	Mini image
+	•	Bold name (clickable)
+	•	Rank icon (⭐/🔸/none)
+	•	Wind bars (▮)
+	•	Abilities (➔➔ NAME), one per line
 
-2. **Draw Phase**
+3.2 Hand Layout
+	•	Hand shown below field (active player only)
+	•	Each card includes:
+	•	Mini image
+	•	Bold name
+	•	Rank icon
+	•	Deploy cost: ➔ symbols
+	•	Icons (if present):
+	•	⚙️ = mechanical
+	•	🥩 = organic
+	•	🔹 = resist
 
-   - Draw 1 card (if deck not empty) card must be from card final json file for players faction
+3.3 Ability Interaction
+	•	Click = trigger targeting
+	•	Once used, mark as used_ability: true
+	•	Ability becomes inactive until next turn
 
-3. **Ability Phase**
+⸻
 
-   - Any goon with a clickable ability may use **1 ability** during this phase
-   - Abilities cost wind ➔ icons (spent from that goon unless stated otherwise)
-   - unusable abilities are hidden for rest of the turn
+SECTION 4: ICON DEFINITIONS AND UI STYLE RULES
 
-4. **Deploy Phase**
+4.1 Icons
 
-   - Deploy any number of goons by spending wind from your field
-   - Cannot deploy more than one SG of the same name
-   - Wind used for payment is added to the goons who paid it
-   - Cards used from the Dead Pool to pay costs are **Retired**
+Icon	Meaning
+➔	Wind (cost)
+▮	Wind (status)
+🔸	Squad Goon
+⭐	Squad Leader
+🥩	Organic
+⚙️	Mechanical
+🔹	Resist
 
-5. **End Phase**
 
-   - Resolve end-of-turn effects
-   - No discard — hand size is unlimited
+⸻
 
-**2.3. Death, Dead Pool, Retirement**
+SECTION 5: GAMESTATE STRUCTURE
 
-- A goon with 4 wind = dead → move to Dead Pool
-- SL with 4 wind = dead → game is lost
-- Cards used as payment → **Retired (banished from game)**
-- Cards revived from Dead Pool → **Retired** if destroyed
-- Cards in the Dead Pool that are used to pay deploy costs are **Retired** — permanently removed from the game (do not return to Dead Pool or discard)
+⸻
 
-**2.4. Illegal Actions**
+5.1 Player Object
 
-- Winding a SL to 4 = immediate loss
-- Trying to deploy a duplicate SG = illegal (cancelled)
-- Trying to use more than one ability per turn = illegal (ignored)
-
----
-
-### SECTION 3: FIELD & HAND DISPLAY LAYOUT
-
-### 3.1 Field Display
-
-- Field is displayed in two horizontal rows:
-
-  - **Top Row** = Opponent (non-active faction)
-  - **Bottom Row** = Active Player (faction whose turn it is)
-
-- Cards are displayed using their **mini card images** (from `image_url_mini` in JSON)
-
-- Cards appear **side-by-side per faction**, left to right
-
-- Each card block includes:
-
-  - Mini image
-  - **Bold card name** (linked to full-size image)
-  - Rank icon: ⭐ (SL), 🔸 (SG), none for BG
-  - wind bars: ▮ for each wind unit (max 4)
-  - **Abilities** listed beneath name, one per line:
-    - Format: ➤➤ [ABILITY NAME]
-    - Each ability is a clickable link if usable
-    - If the goon has already used an ability or is blocked, abilities are not links
-
-### 3.2 Hand Display
-
-- Hand is shown **below the field**, only for active player
-- Each card includes:
-  - Mini image
-  - **Bold name** (linked to full image)
-  - Rank icon: ⭐ (SL), 🔸 (SG), none for BG
-  - Resist icon:🔹 if goon has ‘resist' listed in its icons array
-  - Mechanical icon:⚙️ if goon has ‘mechanical’ listed in its icons array
-  - Organic icon:🥩 if goon has ‘organic’ listed in its icons array
-  - Wind Deploy cost as arrows: ➤➤➤
-  - Organic cards from dead pool cost as organic icons: 🥩🥩🥩
-  - Mechanical cards from dead pool cost as mechanical icons: ⚙️⚙️⚙️
-- Cards appear side-by-side
-- Hand has no size limit
-
-### 3.3 Ability Interaction
-
-- Clicking an ability triggers targeting procedure (if required)
-- System asks user to select a valid goon from the field
-- Once ability is used, it is unsuable and unclickable for the rest of the turn
-
----
-
-### SECTION 4: ICON DEFINITIONS AND UI STYLE RULES
-
-// [TO BE COMPLETED]
-
----
-
-### SECTION 5: GAMESTATE STRUCTURE
-
-**5.1 Core Objects**
-
-##### Player Object
-
-```json
 {
   "faction": "NARC" | "PCU",
   "sl": <CardObject>,
@@ -195,13 +199,12 @@ Turns alternate between players. Each turn follows this structure:
   "discard_pile": [<CardObject>],
   "retired": [<CardObject>]
 }
-```
 
-##### CardObject
 
-- Match format exactly from final JSON files
+⸻
 
-```json
+5.2 CardObject
+
 {
   "name": "Killjoy",
   "rank": "BG",
@@ -216,11 +219,12 @@ Turns alternate between players. Each turn follows this structure:
   "wind": 0,
   "used_ability": false
 }
-```
 
-**5.2 Game Object**
 
-```json
+⸻
+
+5.3 Game Object
+
 {
   "turn": 1,
   "active_faction": "NARC",
@@ -229,20 +233,24 @@ Turns alternate between players. Each turn follows this structure:
   "dead_pool": [<CardObject>],
   "log": [<ActionLogEntry>]
 }
-```
 
-**5.3 ActionLogEntry**
 
-```json
+⸻
+
+5.4 ActionLogEntry
+
 {
   "turn": 1,
-  "faction": "NARC",
-  "action": "Killjoy uses NEUTRALIZE on Meatjack"
+  "faction": "PCU",
+  "action": "Technomancer revives Shocktrooper from Dead Pool"
 }
-```
 
-**5.4 Ability Use Limits**
 
-- Each goon may use only **1 ability per turn**
-- Flag `used_ability: true` disables clickable links
-- Reset `used_ability` to false at start of player's next turn
+⸻
+
+5.5 Ability Use Limits
+	•	Each goon may use only 1 ability per turn
+	•	Mark with used_ability: true
+	•	Reset at the start of that player’s next turn
+
+⸻
