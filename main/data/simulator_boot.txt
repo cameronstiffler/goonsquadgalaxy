@@ -1,4 +1,10 @@
-# GSG CANONICAL SOURCES
+# GSG SIMULATOR BOOT INSTRUCTIONS
+# This file lists canonical URLs for all game assets.
+# ChatGPT must discard all cached data and load only these files
+# before simulating, rendering, or validating GSG games.
+
+# DO NOT EDIT unless you know what you're doing.
+
 narc_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
 pcu_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
 rules: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/rules_final.txt
