@@ -1,11 +1,20 @@
 # GSG SIMULATOR BOOT INSTRUCTIONS
-# This file lists canonical URLs for all game assets.
-# ChatGPT must discard all cached data and load only these files
-# before simulating, rendering, or validating GSG games.
+# This file lists canonical URLs and required SHA-256 checksums
+# ChatGPT must load these files and verify integrity BEFORE running simulation
 
-# DO NOT EDIT unless you know what you're doing.
+narc_json: https://cameronstiffler.github.io/goonsquadgalaxy/data/narc_final.json
+narc_checksum: 3c7cc0614059190a01d7ca103df04b96973cd9c527e25a2ce2636241b08a379b
 
-narc_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
-pcu_json: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
-rules: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/rules_final.txt
-protocols: https://cameronstiffler.github.io/goonsquadgalaxy/main/data/ui_protocols.txt
+pcu_json: https://cameronstiffler.github.io/goonsquadgalaxy/data/pcu_final.json
+pcu_checksum: d2e9a54a5cd9219b2dd84564982b381432eb97685e75887e878f0cddbe587bbb
+
+rules: https://cameronstiffler.github.io/goonsquadgalaxy/data/rules_final.txt
+rules_checksum: c5c4e6e87d420022c61dc11ed4bbb129aa070b2944db920b6894de53b2adc490
+
+protocols: https://cameronstiffler.github.io/goonsquadgalaxy/data/ui_protocols.txt
+protocols_checksum: 5d8e3530c30543dd4229b21bbac6adf5c3e360e982b62b0894e59a9e26846e80
+
+# ENFORCEMENT FLAGS
+force_load: true
+validate_checksums: true
+ignore_memory: true

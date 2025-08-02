@@ -105,14 +105,12 @@ SECTION 2: TURN AND ACTION FLOW
 
 ⸻
 
+
 2.1 Start of Game
-	•	Load all source files:
-	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/rules_final.txt
-	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/ui_protocols.txt
-	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/narc_final.json
-	•	https://cameronstiffler.github.io/goonsquadgalaxy/main/data/pcu_final.json
-	•	Each player starts with their SL on field with 0 wind
-	•	Each player draws 6 cards from their deck
+	•	Load canonical source files as defined in simulator_boot.txt
+	• Validate checksums and enforce strict loading before game start
+	• Each player starts with their SL on field with 0 wind
+	• Each player draws 6 cards from their deck
 
 ⸻
 
