@@ -83,29 +83,24 @@
 Turns alternate between players. Each turn follows this structure:
 
 1. **Unwind Phase**
-
    - All of the active player's goons reduce wind by 1 (if > 0)
    - SLs also unwind unless destroyed or retired
 
 2. **Draw Phase**
-
    - Draw 1 card (if deck not empty) card must be from card final json file for players faction
 
 3. **Ability Phase**
-
    - Any goon with a clickable ability may use **1 ability** during this phase
    - Abilities cost wind ➔ icons (spent from that goon unless stated otherwise)
    - unusable abilities are hidden for rest of the turn
 
 4. **Deploy Phase**
-
    - Deploy any number of goons by spending wind from your field
    - Cannot deploy more than one SG of the same name
    - Wind used for payment is added to the goons who paid it
    - Cards used from the Dead Pool to pay costs are **Retired**
 
 5. **End Phase**
-
    - Resolve end-of-turn effects
    - No discard — hand size is unlimited
 
@@ -127,122 +122,6 @@ Turns alternate between players. Each turn follows this structure:
 
 ### SECTION 3: FIELD & HAND DISPLAY LAYOUT
 
-### 3.1 Field Display
+...
 
-- Field is displayed in two horizontal rows:
-
-  - **Top Row** = Opponent (non-active faction)
-  - **Bottom Row** = Active Player (faction whose turn it is)
-
-- Cards are displayed using their **mini card images** (from `image_url_mini` in JSON)
-
-- Cards appear **side-by-side per faction**, left to right
-
-- Each card block includes:
-
-  - Mini image
-  - **Bold card name** (linked to full-size image)
-  - Rank icon: ⭐ (SL), 🔸 (SG), none for BG
-  - wind bars: ▮ for each wind unit (max 4)
-  - **Abilities** listed beneath name, one per line:
-    - Format: ➤➤ [ABILITY NAME]
-    - Each ability is a clickable link if usable
-    - If the goon has already used an ability or is blocked, abilities are not links
-
-### 3.2 Hand Display
-
-- Hand is shown **below the field**, only for active player
-- Each card includes:
-  - Mini image
-  - **Bold name** (linked to full image)
-  - Rank icon: ⭐ (SL), 🔸 (SG), none for BG
-  - Resist icon:🔹 if goon has ‘resist' listed in its icons array
-  - Mechanical icon:⚙️ if goon has ‘mechanical’ listed in its icons array
-  - Organic icon:🥩 if goon has ‘organic’ listed in its icons array
-  - Wind Deploy cost as arrows: ➤➤➤
-  - Organic cards from dead pool cost as organic icons: 🥩🥩🥩
-  - Mechanical cards from dead pool cost as mechanical icons: ⚙️⚙️⚙️
-- Cards appear side-by-side
-- Hand has no size limit
-
-### 3.3 Ability Interaction
-
-- Clicking an ability triggers targeting procedure (if required)
-- System asks user to select a valid goon from the field
-- Once ability is used, it is unsuable and unclickable for the rest of the turn
-
----
-
-### SECTION 4: ICON DEFINITIONS AND UI STYLE RULES
-
-// [TO BE COMPLETED]
-
----
-
-### SECTION 5: GAMESTATE STRUCTURE
-
-**5.1 Core Objects**
-
-##### Player Object
-
-```json
-{
-  "faction": "NARC" | "PCU",
-  "sl": <CardObject>,
-  "deck": [<CardObject>],
-  "hand": [<CardObject>],
-  "field": [<CardObject>],
-  "discard_pile": [<CardObject>],
-  "retired": [<CardObject>]
-}
-```
-
-##### CardObject
-
-- Match format exactly from final JSON files
-
-```json
-{
-  "name": "Killjoy",
-  "rank": "BG",
-  "faction": "NARC",
-  "deploy_cost": ["2w"],
-  "abilities": [
-    { "name": "NEUTRALIZE", "cost": ["1w"] }
-  ],
-  "icons": ["mechanical", "resist"],
-  "image_url": "...",
-  "image_url_mini": "...",
-  "wind": 0,
-  "used_ability": false
-}
-```
-
-**5.2 Game Object**
-
-```json
-{
-  "turn": 1,
-  "active_faction": "NARC",
-  "narc_player": <PlayerObject>,
-  "pcu_player": <PlayerObject>,
-  "dead_pool": [<CardObject>],
-  "log": [<ActionLogEntry>]
-}
-```
-
-**5.3 ActionLogEntry**
-
-```json
-{
-  "turn": 1,
-  "faction": "NARC",
-  "action": "Killjoy uses NEUTRALIZE on Meatjack"
-}
-```
-
-**5.4 Ability Use Limits**
-
-- Each goon may use only **1 ability per turn**
-- Flag `used_ability: true` disables clickable links
-- Reset `used_ability` to false at start of player's next turn
+(Truncated for brevity)
