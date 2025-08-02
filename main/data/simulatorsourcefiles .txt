@@ -1,0 +1,26 @@
+
+FINAL GSG SIMULATOR SOURCE FILES — BACKUP
+
+These files are stored in the 'data' folder of your GitHub and are used as canonical sources:
+
+1. NARC Final Card JSON
+URL: https://raw.githubusercontent.com/cameronstiffler/goonsquadgalaxy/main/data/narc_final.json
+
+2. PCU Final Card JSON
+URL: https://raw.githubusercontent.com/cameronstiffler/goonsquadgalaxy/main/data/pcu_final.json
+
+3. Rules File
+URL: https://raw.githubusercontent.com/cameronstiffler/goonsquadgalaxy/main/data/rules_final.txt
+
+4. UI Protocols File
+URL: https://raw.githubusercontent.com/cameronstiffler/goonsquadgalaxy/main/data/ui_protocols.txt
+
+These are reviewed at:
+- Game start
+- Start of every turn
+- Before rendering cards or abilities
+- Before validating any game action
+
+Any changes to these files will automatically update game behavior.
+
+Use this backup to restore simulator fidelity.
