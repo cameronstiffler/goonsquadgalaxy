@@ -1,0 +1,506 @@
+{
+"id": "basicpcu",
+"faction": "pcu",
+"goons":[
+  {
+    "name": "Dragoon",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "3w"
+    ],
+    "icons": [
+      "pcu",
+      "mechanical"
+    ],
+    "requirements": "Krax must be in play to deploy Dragoon.",
+    "abilities": [
+      {
+        "name": "ATTACK",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 1 wind to target Goon"
+      }
+    ],
+    "notes": [
+      "If Krax is destroyed so is Dragoon. Some or all wind applied to Krax as damage may be applied to Dragoon instead."
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/dragoon.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
+  },
+  {
+    "name": "Void Freak",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "1w"
+    ],
+    "icons": [
+      "pcu",
+      "organic",
+      "no_unwind"
+    ],
+    "abilities": [
+      {
+        "name": "THRASHING VAULT",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 1 wind to target Goon. Must use this ability every turn if able."
+      }
+    ],
+    "notes": [
+      "Must attack if able."
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/freak.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/freak.jpg"
+  },
+  {
+    "name": "K\u00e4sekobold",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "2w"
+    ],
+    "icons": [
+      "pcu",
+      "organic"
+    ],
+    "abilities": [
+      {
+        "name": "ADD NAUSEAM",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 1 wind to target Goon"
+      },
+      {
+        "name": "REVOLT",
+        "cost": [
+          "p"
+        ],
+        "text": "Goons must spend 1 additional wind to target K\u00e4sekobold"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/goblin.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/goblin.jpg"
+  },
+  {
+    "name": "Grim",
+    "rank": "Squad Leader",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [],
+    "icons": [
+      "pcu",
+      "organic",
+      "resist"
+    ],
+    "abilities": [
+      {
+        "name": "DEFY NATURE",
+        "cost": [
+          "0w"
+        ],
+        "text": "Remove 1 wind from any target Goon. Does not cost wind."
+      }
+    ],
+    "flavor_text": "I seek only to find amusement in your annihilation",
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/grim.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/grim.jpg"
+  },
+  {
+    "name": "Helvis",
+    "rank": "Titan",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "6w"
+    ],
+    "icons": [
+      "pcu"
+    ],
+    "abilities": [
+      {
+        "name": "ABYSSAL BELLOW",
+        "cost": [
+          "0w"
+        ],
+        "text": "Target player's Goons may not use abilities on their next turn."
+      },
+      {
+        "name": "SEISMIC STOMP",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 2 wind to all enemy Goons"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/helvis.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/helvis.jpg"
+  },
+  {
+    "name": "Blood Howler",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "2w"
+    ],
+    "icons": [
+      "pcu",
+      "mechanical"
+    ],
+    "abilities": [
+      {
+        "name": "BALLISTIC BARRAGE",
+        "cost": [
+          "1w"
+        ],
+        "text": "Do 1 damage to target goon. This ability may be used up to 4 times per turn on any combination of targets."
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/howler.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/howler.jpg"
+  },
+  {
+    "name": "Krax",
+    "rank": "Squad Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "3w"
+    ],
+    "icons": [
+      "pcu",
+      "organic",
+      "resist"
+    ],
+    "abilities": [
+      {
+        "name": "BASH IN SKULL",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 2 wind to target Goon"
+      },
+      {
+        "name": "CHAIN REACTION",
+        "cost": [
+          "p"
+        ],
+        "text": "If Krax Destroys Target Goon with BASH IN SKULL, he may add 2 wind to another target Goon. This chain reaction may go on as long as it is able."
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/krax.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/krax.jpg"
+  },
+  {
+    "name": "Kriegsgheist",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "3g",
+      "3m"
+    ],
+    "icons": [
+      "pcu",
+      "no_unwind",
+      "resist"
+    ],
+    "requirements": "Technomancer must be in play to deploy Kriegsgeist.",
+    "abilities": [
+      {
+        "name": "BLITZ",
+        "cost": [],
+        "text": "Add 3 wind to target goon. Must use this ability every turn if able"
+      }
+    ],
+    "notes": [
+      "Retire Kriegsgheist from game when destroyed"
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/kriegsgheist.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/kriegsgheist.jpg"
+  },
+  {
+    "name": "Meatjacker",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "1m"
+    ],
+    "icons": [
+      "pcu",
+      "mechanical",
+      "no_unwind"
+    ],
+    "abilities": [
+      {
+        "name": "ATTACK WITH HOST",
+        "cost": [
+          "1w"
+        ],
+        "text": "Do 1 damage to target Goon"
+      }
+    ],
+    "notes": [
+      "Meat Jacker returns to players hand when destroyed"
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/meatjacker.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/meatjacker.jpg"
+  },
+  {
+    "name": "Meat Vegetable",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "0w"
+    ],
+    "icons": [
+      "pcu",
+      "organic"
+    ],
+    "flavor_text": "Carve us off a couple steaks and I\u2019ll grab the bottle of Zurion Noir I had them portal over last resupply. It should pair nicely.",
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/meatveg.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/meatveg.jpg"
+  },
+  {
+    "name": "Restless Natives",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "2w"
+    ],
+    "icons": [
+      "pcu",
+      "organic",
+      "no_unwind"
+    ],
+    "abilities": [
+      {
+        "name": "MOB",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 1 wind to 2 target Goons"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/natives.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/natives.jpg"
+  },
+  {
+    "name": "Annihilist Overseer",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "4w"
+    ],
+    "icons": [
+      "pcu"
+    ],
+    "abilities": [
+      {
+        "name": "BLIND",
+        "cost": [
+          "1w"
+        ],
+        "text": "Target Goon may not use ability or contribute wind on it's next"
+      },
+      {
+        "name": "BEHEAD",
+        "cost": [
+          "3w"
+        ],
+        "text": "Destroy target Goon"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/nives.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/nives.jpg"
+  },
+  {
+    "name": "Nives",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "4w"
+    ],
+    "icons": [
+      "pcu",
+      "mechanical"
+    ],
+    "requirements": "Vex must be in play to deploy Nives.",
+    "abilities": [
+      {
+        "name": "SABER TEETH",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 2 wind to target Goon"
+      }
+    ],
+    "notes": [
+      "If Vex is destroyed so is Nives.",
+      "Nives can contribute wind to pay for Vex abilities."
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/nives.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/nives.jpg"
+  },
+  {
+    "name": "Primordial Oozer",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "1w"
+    ],
+    "icons": [
+      "pcu",
+      "organic"
+    ],
+    "abilities": [
+      {
+        "name": "DISCHARGE",
+        "cost": [
+          "1w"
+        ],
+        "text": "Add 1 wind to target Goon"
+      },
+      {
+        "name": "GOOP",
+        "cost": [
+          "p"
+        ],
+        "text": "Unfriendly Goon who targets Oozer with ability does not unwind during it's next unwind phase"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/oozer.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/oozer.jpg"
+  },
+  {
+    "name": "Psychodelic Toad",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "2w"
+    ],
+    "icons": [
+      "pcu",
+      "organic"
+    ],
+    "abilities": [
+      {
+        "name": "DOSE",
+        "cost": [
+          "2w"
+        ],
+        "text": "Target Goon may not use ability or contribute wind to Deploy on its Player\u2019s next turn. Target Goon may still unwind during its unwind phase."
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/toad.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/toad.jpg"
+  },
+  {
+    "name": "Singularity",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "2w"
+    ],
+    "icons": [
+      "pcu",
+      "no_unwind"
+    ],
+    "abilities": [
+      {
+        "name": "DRAW FIRE",
+        "cost": [
+          "p"
+        ],
+        "text": "Player's Goons may not be target of abilities of unfriendly Goons while Singularity is in play. Singularity must be destroyed first."
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/singularity.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/singularity.jpg"
+  },
+  {
+    "name": "Technomancer",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "4w"
+    ],
+    "icons": [
+      "pcu",
+      "organic",
+      "mechanical"
+    ],
+    "abilities": [
+      {
+        "name": "RAISE",
+        "cost": [
+          "1w",
+          "1m"
+        ],
+        "text": "Goon with meat from Dead Pool enters play under players control"
+      },
+      {
+        "name": "RECYCLE",
+        "cost": [
+          "1w",
+          "1g"
+        ],
+        "text": "Goon with gear from Dead Pool enters play under players control"
+      }
+    ],
+    "notes": [
+      "RAISED and RECYCLED Goons do not unwind during unwind phase and are Retired from game when destroyed"
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/technomancer.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/technomancer.jpg"
+  },
+  {
+    "name": "Voidling",
+    "rank": "Basic Goon",
+    "faction": "pcu",
+    "duplicates": "4",
+    "deploy_cost": [
+      "3w"
+    ],
+    "icons": [
+      "pcu",
+      "organic"
+    ],
+    "abilities": [
+      {
+        "name": "SHOT SPOTTER",
+        "cost": [
+          "1w"
+        ],
+        "text": "Target Goon who takes wind as damage this turn does not unwind during it's next unwind phase"
+      },
+      {
+        "name": "RALLY RINGER",
+        "cost": [
+          "4w"
+        ],
+        "text": "Player may move any card from deck to hand and reshuffle deck"
+      }
+    ],
+    "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/voidling.png",
+    "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/voidling.jpg"
+  }
+]
+}
