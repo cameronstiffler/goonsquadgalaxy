@@ -1,4 +1,23 @@
+# --- Status helpers for Wave-A effects ---
 from __future__ import annotations
+
+
+def has_status(goon, tag):
+    """Return True if goon.status[tag] exists and is nonempty."""
+    arr = getattr(goon, "status", {}).get(tag, [])
+    return bool(arr)
+
+
+def consume_status(goon, tag, predicate=lambda t: True):
+    """Remove the first status token matching predicate from goon.status[tag]."""
+    arr = getattr(goon, "status", {}).get(tag, [])
+    for i, t in enumerate(arr):
+        if predicate(t):
+            arr.pop(i)
+            break
+    if not arr:
+        getattr(goon, "status", {}).pop(tag, None)
+
 
 # Single source of truth for rule helpers.
 # NO imports from engine/UI/payments here.
@@ -84,8 +103,17 @@ def _rank_str(x) -> str:
 
 def can_target_card(gs, source, target, *, hostile: bool) -> bool:
     """Hostile target gating: SL protected by BG/SG; Titans cannot be hostile-targeted."""
-    if not hostile:
-        return True
+    # Wave‑A: cannot_be_targeted / must_be_destroyed_first
+    if hostile:
+        # cannot_be_targeted blocks hostile targeting entirely
+        if has_status(target, "cannot_be_targeted"):
+            return False
+        # If any ally on the defending side must_be_destroyed_first, only those may be targeted
+        side = getattr(gs, "p1", None) if target in getattr(getattr(gs, "p1", None), "board", []) else getattr(gs, "p2", None)
+        if side:
+            must_first = [c for c in getattr(side, "board", []) if has_status(c, "must_be_destroyed_first")]
+            if must_first and target not in must_first:
+                return False
     tr = _rank_str(target)
     if tr in ("T", "TITAN"):
         return False

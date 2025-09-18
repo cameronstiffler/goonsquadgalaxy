@@ -8,7 +8,7 @@
       "duplicates": 4,
       "faction": "PCU",
       "deploy_cost": {
-        "wind": 3,
+        "wind": 6,
         "gear": 0,
         "meat": 0
       },
@@ -75,6 +75,80 @@
       ],
       "notes": [],
       "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/dragoon.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
+    },{
+      "name": "Kill Zone Companion",
+      "rank": "BG",
+      "duplicates": 4,
+      "faction": "PCU",
+      "deploy_cost": {
+        "wind": 4,
+        "gear": 0,
+        "meat": 0
+      },
+      "biological": false,
+      "mechanical": true,
+      "resist": false,
+      "no_unwind": false,
+      "deploy_requirements": [
+        {
+          "type": "requires_card_in_play",
+          "card_name": "Krax",
+          "side": "self"
+        }
+      ],
+      "abilities": [
+        {
+          "name": "MAUL",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 1 wind to target Goon",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 1,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "MANS BEST FIEND",
+          "cost": {
+            "wind": 4,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": true,
+          "must_use": false,
+          "text": "Some or all wind applied to Krax as damage from enemy Goon ability may be applied to Mutt instead. If Krax is destroyed, Mutt is destroyed.",
+          "effects": [
+            {
+              "effect_type": "redirect_damage",
+              "target": [
+                "card_name:Krax"
+              ],
+              "duration": "persistent"
+            },
+            {
+              "effect_type": "destroy_self_if_target_destroyed",
+              "target": [
+                "card_name:Krax"
+              ],
+              "duration": "persistent"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mutt.jpg",
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
     },
     {
@@ -351,7 +425,7 @@
       "duplicates": 4,
       "faction": "PCU",
       "deploy_cost": {
-        "wind": 3,
+        "wind": 6,
         "gear": 0,
         "meat": 0
       },
@@ -415,6 +489,89 @@
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/krax.jpg"
     },
     {
+      "name": "Vex",
+      "rank": "SG",
+      "duplicates": 4,
+      "faction": "PCU",
+      "deploy_cost": {
+        "wind": 4,
+        "gear": 0,
+        "meat": 0
+      },
+      "biological": true,
+      "mechanical": false,
+      "resist": true,
+      "no_unwind": false,
+      "deploy_requirements": [],
+      "abilities": [
+        {
+          "name": "PLINK",
+          "cost": {
+            "wind": 0,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 1 wind to target Goon",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 1,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "SNIPE",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 2 wind to target Goon",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 2,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "DOME",
+          "cost": {
+            "wind": 3,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Destroy target Goon",
+          "effects": [
+            {
+              "effect_type": "destroy",
+              "amount": 2,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        }
+      ],
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/vex.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/vex.jpg"
+    },
+    {
       "name": "Kriegsgheist",
       "rank": "BG",
       "duplicates": 4,
@@ -454,26 +611,6 @@
                 "any"
               ],
               "duration": "instant"
-            }
-          ]
-        },
-        {
-          "name": "RETINUE OF RUIN",
-          "cost": {
-            "wind": 0,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": true,
-          "must_use": false,
-          "text": "When Kriegsgheist is destroyed, retire it from the game.",
-          "effects": [
-            {
-              "effect_type": "retire_on_destroy",
-              "target": [
-                "self"
-              ],
-              "duration": "persistent"
             }
           ]
         }
@@ -559,7 +696,7 @@
       "deploy_requirements": [],
       "abilities": [],
       "notes": [],
-      "flavor_text": "Carve us off a couple steaks and I\u2019ll grab the bottle of Zurion Noir. E\u2019dom brought that back from his little trip to the food planet.",
+      "flavor_text": "Carve us off a couple steaks and I\u2019ll grab the bottle of Zurion Noir I had them portal over last resupply. It should pair nicely.",
       "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/meatveg.png",
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/meatveg.jpg"
     },

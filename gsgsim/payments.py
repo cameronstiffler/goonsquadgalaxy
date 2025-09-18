@@ -22,13 +22,17 @@ def _eligible_with_caps(player: Player) -> List[Tuple[int, Card, int]]:
     the auto planner will restrict itself to 'safe' caps for SLs.
     """
     out: List[Tuple[int, Card, int]] = []
+    from .rules import has_status
+
     for idx, c in enumerate(getattr(player, "board", [])):
         if getattr(c, "new_this_turn", False):
-            # annotate reason for UIs that render a table
             setattr(c, "_why_ineligible", "new this turn")
             continue
+        if has_status(c, "disable_contribution"):
+            setattr(c, "_why_ineligible", "disable_contribution")
+            continue
         wind = getattr(c, "wind", 0)
-        cap = max(0, 4 - wind)  # hitting 4 kills the card; 0..3 is safe while 4 is lethal
+        cap = max(0, 4 - wind)
         if cap > 0:
             out.append((idx, c, cap))
     return out
@@ -100,6 +104,8 @@ def manual_pay(player, total: int, plan: list[tuple[int, int]], allow_lethal_sl:
     board = list(getattr(player, "board", []))
     before = [getattr(c, "wind", 0) for c in board]
 
+    from .rules import has_status
+
     def is_sl(card):
         r = getattr(card, "rank", "")
         return (isinstance(r, str) and r.upper() == "SL") or (hasattr(r, "name") and str(r.name).upper() == "SL")
@@ -109,6 +115,8 @@ def manual_pay(player, total: int, plan: list[tuple[int, int]], allow_lethal_sl:
             if amt <= 0 or not (0 <= idx < len(board)):
                 raise RuntimeError("bad plan")
             c = board[idx]
+            if has_status(c, "disable_contribution"):
+                raise RuntimeError("disable_contribution")
             if is_sl(c) and getattr(c, "wind", 0) + amt > 3 and not allow_lethal_sl:
                 raise RuntimeError("lethal")
             setattr(c, "wind", getattr(c, "wind", 0) + amt)
@@ -146,8 +154,12 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None):
 
     board = list(getattr(player, "board", []))
 
+    from .rules import has_status
+
     def capacity(card):
         if cannot_spend_wind(gs, card):
+            return 0
+        if has_status(card, "disable_contribution"):
             return 0
         w = int(getattr(card, "wind", 0) or 0)
         return max(0, 4 - w)

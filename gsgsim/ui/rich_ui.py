@@ -12,6 +12,51 @@ except Exception:
     engine_rule_shim = None
 
 
+# --- Wave-A interpreter UI chooser integration ---
+def _ui_chooser_for_interpreter(gs):
+    def chooser(kind, options):
+        if kind == "choose_targets":
+            return select_targets_via_existing_ui(gs, options)
+        if kind == "distribute_wind":
+            return distribute_wind_via_ui(gs, options)
+        if kind == "search_deck":
+            return pick_from_deck_via_ui(gs, options)
+        return []
+
+    return chooser
+
+
+def select_targets_via_existing_ui(gs, options):
+    # Minimal: just return the first N from pool for now
+    pool = options.get("pool", [])
+    need = options.get("need", ["any"])
+    n = 1
+    if need and need[0].startswith("two"):
+        n = 2
+    if need and need[0].startswith("three"):
+        n = 3
+    return pool[:n]
+
+
+def distribute_wind_via_ui(gs, options):
+    # Minimal: distribute 1 to each until total is met
+    pool = options.get("pool", [])
+    total = options.get("total", 1)
+    out = {}
+    for goon in pool:
+        if total <= 0:
+            break
+        out[goon] = 1
+        total -= 1
+    return out
+
+
+def pick_from_deck_via_ui(gs, options):
+    # Minimal: pick the first card
+    deck = options if isinstance(options, list) else options.get("deck", [])
+    return deck[0] if deck else None
+
+
 # ---------- icon/name helpers ----------
 
 

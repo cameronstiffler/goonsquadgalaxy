@@ -27,6 +27,13 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
     if getattr(card, "new_this_turn", False):
         return False
 
+    # Block if disable_abilities status is present
+    from .rules import has_status
+
+    if has_status(card, "disable_abilities"):
+        # Optionally print a message if UI expects it
+        return False
+
     abilities = getattr(card, "abilities", [])
     try:
         ability = abilities[idx]
@@ -57,9 +64,12 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
         if not distribute_wind(owner, wind_cost, gs=gs):
             return False
 
-    # Only then run handler or effects
+    # If ability.effects is present, call interpreter
     if effects:
-        return bool(run_effects(gs, card, targets, effects))
+        from .engine import run_machine_effects
+        from .ui.rich_ui import _ui_chooser_for_interpreter
+
+        return bool(run_machine_effects(gs, card, ability, chooser=_ui_chooser_for_interpreter(gs)))
     else:
         return bool(fn(gs, card, targets))
 
@@ -129,6 +139,5 @@ def _diag_grim_0(gs, card, targets):
 
 @registers("Target Marker Probe", 0)
 def _tmp_mark(gs, card, targets):
-    from .effects import run_effects
 
     return bool(run_effects(gs, card, targets, [{"op": "mark"}]))

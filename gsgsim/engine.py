@@ -102,10 +102,31 @@ def start_of_turn(gs: GameState) -> None:
                 c.ability_used_this_turn = False
     # Auto-unwind only the current turn player's board, skipping no_unwind
     from .rules import apply_wind
+    from .rules import consume_status
+    from .rules import has_status
 
     for c in gs.turn_player.board:
         if getattr(c, "wind", 0) > 0 and not getattr(c, "no_unwind", False):
+            # Enforce prevent_unwind status
+            if has_status(c, "prevent_unwind"):
+                consume_status(c, "prevent_unwind", lambda t: t.get("duration") in ("next_unwind", "until_end_of_turn"))
+                continue
             apply_wind(gs, c, -1)
+
+    # Clean up until_end_of_turn and next_turn statuses
+    for side in (gs.p1, gs.p2):
+        for c in getattr(side, "board", []):
+            status = getattr(c, "status", {})
+            # Remove all until_end_of_turn tokens
+            for tag, arr in list(status.items()):
+                status[tag] = [t for t in arr if t.get("duration") != "until_end_of_turn"]
+                if not status[tag]:
+                    status.pop(tag)
+            # Remove next_turn tokens if added on previous turn
+            for tag, arr in list(status.items()):
+                status[tag] = [t for t in arr if not (t.get("duration") == "next_turn" and t.get("turn_tag") == gs.turn_number - 1)]
+                if not status[tag]:
+                    status.pop(tag)
 
 
 def _clear_turn_locks(gs):

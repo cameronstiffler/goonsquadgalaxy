@@ -119,7 +119,7 @@
       "duplicates": 4,
       "faction": "NARC",
       "deploy_cost": {
-        "wind": 3,
+        "wind": 5,
         "gear": 0,
         "meat": 0
       },
@@ -307,8 +307,8 @@
           ]
         }
       ],
-      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/marine_marauder.png",
-      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/marine_marauder.jpg"
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/marauder.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/marauder.jpg"
     },
     {
       "name": "K-9.0",
@@ -356,7 +356,7 @@
       "duplicates": 4,
       "faction": "NARC",
       "deploy_cost": {
-        "wind": 3,
+        "wind": 4,
         "gear": 0,
         "meat": 0
       },
@@ -787,8 +787,8 @@
           ]
         }
       ],
-      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/noblobber.png",
-      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/noblobber.jpg"
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/lobber.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/lobber.jpg"
     },
     {
       "name": "Sausage Droid",
@@ -940,8 +940,8 @@
           ]
         }
       ],
-      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/shield.png",
-      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/shield.jpg"
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/array.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/array.jpg"
     },
     {
       "name": "Hover Shield",
@@ -980,7 +980,7 @@
           ]
         }
       ],
-      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/shield.png",
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/hovershield.png",
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/shield.jpg"
     },
     {
