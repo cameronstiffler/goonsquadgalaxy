@@ -187,6 +187,17 @@ def _name_with_icons(card: Card, faction_str: str) -> str:
     return f"{name}{''.join(p for p in pieces if p)}"
 
 
+def _format_cost_tokens(w: int, g: int, m: int) -> str:
+    parts: list[str] = []
+    if w:
+        parts.append(f"[white]{w}⟲[/white]")
+    if g:
+        parts.append(f"[grey70]{g}⛭[/grey70]")
+    if m:
+        parts.append(f"[red]{m}⚈[/red]")
+    return " ".join(parts)
+
+
 def cost_str(card: Card) -> str:
     try:
         w = int(getattr(card, "deploy_wind", 0) or 0)
@@ -194,36 +205,54 @@ def cost_str(card: Card) -> str:
         m = int(getattr(card, "deploy_meat", 0) or 0)
     except Exception:
         w = g = m = 0
-    return f"{w}⟲ {g}⛭ {m}⚈"
+    return _format_cost_tokens(w, g, m)
 
 
 def _cost_block(obj) -> str:
-    """Return cost in 'N⟲ N⛭ N⚈' for either an ability or a card."""
+    """Return formatted cost string for either an ability or a card."""
     try:
         cost = getattr(obj, "cost", None)
         if isinstance(cost, dict):
             w = int(cost.get("wind", 0) or 0)
             g = int(cost.get("gear", 0) or 0)
             m = int(cost.get("meat", 0) or 0)
-            return f"{w}⟲ {g}⛭ {m}⚈"
+            return _format_cost_tokens(w, g, m)
     except Exception:
         pass
-    w = int(getattr(obj, "deploy_wind", 0) or 0)
-    g = int(getattr(obj, "deploy_gear", 0) or 0)
-    m = int(getattr(obj, "deploy_meat", 0) or 0)
-    return f"{w}⟲ {g}⛭ {m}⚈"
+
+    try:
+        w = int(getattr(obj, "deploy_wind", 0) or 0)
+        g = int(getattr(obj, "deploy_gear", 0) or 0)
+        m = int(getattr(obj, "deploy_meat", 0) or 0)
+        return _format_cost_tokens(w, g, m)
+    except Exception:
+        return ""
 
 
 def _abilities_block(card: "Card") -> str:
     """Format abilities as lines: [index] [name][cost N⟲ N⛭ N⚈] [text]"""
     out = []
+    used_set = set(getattr(card, "_abilities_used_this_turn", set()))
     for i, a in enumerate(getattr(card, "abilities", []) or []):
         name = _safe_str(getattr(a, "name", "ABILITY"))
         text = _safe_str(getattr(a, "text", "") or "")
         cost_txt = _cost_block(a)
-        line = f"{i} {name}[{cost_txt}]"
+        used = i in used_set
+        idx_txt = f"[cyan]{i}[/cyan]"
+        name_color = "grey50" if used else None
+
+        line = f"{idx_txt} "
+        if name_color:
+            line += f"[{name_color}]{name}[/{name_color}]"
+        else:
+            line += name
+        if cost_txt:
+            line += f" [{cost_txt}]"
         if text:
-            line += f" {text}"
+            if used:
+                line += f" [grey50]{text}[/grey50]"
+            else:
+                line += f" {text}"
         out.append(line)
     return "\n".join(out) if out else "-"
 
@@ -273,6 +302,8 @@ class RichUI:
         if getattr(card, "new_this_turn", False):
             return False
         if has_status(card, "disable_abilities"):
+            return False
+        if getattr(card, "ability_used_this_turn", False):
             return False
 
         cost = (getattr(ability, "cost", {}) or {}).get("wind", 0)
@@ -360,15 +391,22 @@ class RichUI:
         c.print(f"Turn {gs.turn_number} | Player: {'P1' if gs.turn_player is gs.p1 else 'P2'}")
 
         def board_table(title: str, player) -> Table:
+            faction = str(getattr(player, "faction", "")).upper()
+            if faction == "PCU":
+                title = f"[green]{faction}[/green] {title}"
+            elif faction == "NARC":
+                title = f"[orange1]{faction}[/orange1] {title}"
+            else:
+                title = f"{faction or ''} {title}".strip()
             t = Table(title=title)
-            t.add_column("#", justify="right", style="cyan")
+            t.add_column("#", justify="right")
             t.add_column("Name")
             t.add_column("Wind", justify="right")
             t.add_column("Abilities")
             for i, card in enumerate(getattr(player, "board", [])):
                 abil_txt = _abilities_block(card)
                 t.add_row(
-                    str(i),
+                    f"[cyan]{i}[/cyan]",
                     _name_with_icons(card, _resolve_faction(player, card)),
                     str(getattr(card, "wind", 0)),
                     abil_txt,
@@ -385,18 +423,25 @@ class RichUI:
         # Dead Pool HUD line (always show counters)
         bio = getattr(gs, "dead_pool_bio", 0)
         mech = getattr(gs, "dead_pool_mech", 0)
-        c.print(f"Dead Pool 🥩:{bio} ⚙️ :{mech}")
+        c.print(f"Dead Pool 🥩:[red]{bio}[/red] ⚙️ :[grey70]{mech}[/grey70]")
 
         def hand_table(title: str, player) -> Table:
-            t = Table(title=f"{title} hand ({len(player.hand)})")
-            t.add_column("#", justify="right", style="cyan")
+            faction = str(getattr(player, "faction", "")).upper()
+            if faction == "PCU":
+                hand_title = f"[green]{faction}[/green] {title} hand"
+            elif faction == "NARC":
+                hand_title = f"[orange1]{faction}[/orange1] {title} hand"
+            else:
+                hand_title = f"{faction} {title} hand".strip()
+            t = Table(title=f"{hand_title} ({len(player.hand)})")
+            t.add_column("#", justify="right")
             t.add_column("Name")
             t.add_column("Cost")
             for i, card in enumerate(player.hand):
                 t.add_row(
-                    str(i),
+                    f"[cyan]{i}[/cyan]",
                     _name_with_icons(card, _resolve_faction(player, card)),
-                    _cost_block(card),
+                    _cost_block(card) or "-",
                 )
             return t
 

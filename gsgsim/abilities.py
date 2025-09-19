@@ -48,6 +48,9 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
     if targets is None:
         targets = []
 
+    if getattr(card, "ability_used_this_turn", False) and not getattr(ability, "passive", False):
+        return False
+
     # Determine if we have a registry handler up front
     key = (getattr(card, "name", "").lower(), idx)
     fn = REGISTRY.get(key)
@@ -104,12 +107,11 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
     if _has_cost_waiver():
         wind_cost = 0
 
-    from .engine import add_wind_and_check
-
     def _pay_wind_cost(gs, source_card, total: int) -> bool:
         if total <= 0:
             return True
 
+        from .engine import add_wind_and_check
         from .rules import cannot_spend_wind
 
         board = list(getattr(gs.turn_player, "board", [])) if getattr(gs, "turn_player", None) else []
