@@ -230,29 +230,25 @@ def _cost_block(obj) -> str:
 
 
 def _abilities_block(card: "Card") -> str:
-    """Format abilities as lines: [index] [name][cost N⟲ N⛭ N⚈] [text]"""
+    """Format abilities as lines: [index] [name][cost tokens] [text]"""
     out = []
     used_set = set(getattr(card, "_abilities_used_this_turn", set()))
+    card_locked = bool(getattr(card, "ability_used_this_turn", False))
     for i, a in enumerate(getattr(card, "abilities", []) or []):
         name = _safe_str(getattr(a, "name", "ABILITY"))
         text = _safe_str(getattr(a, "text", "") or "")
         cost_txt = _cost_block(a)
-        used = i in used_set
-        idx_txt = f"[cyan]{i}[/cyan]"
-        name_color = "grey50" if used else None
+        is_passive = bool(getattr(a, "passive", False))
+        locked = (card_locked and not is_passive) or (i in used_set)
 
-        line = f"{idx_txt} "
-        if name_color:
-            line += f"[{name_color}]{name}[/{name_color}]"
-        else:
-            line += name
+        idx_txt = f"[grey50]{i}[/grey50]" if locked else f"[cyan]{i}[/cyan]"
+        name_txt = f"[grey50]{name}[/grey50]" if locked else name
+
+        line = f"{idx_txt} {name_txt}"
         if cost_txt:
             line += f" [{cost_txt}]"
         if text:
-            if used:
-                line += f" [grey50]{text}[/grey50]"
-            else:
-                line += f" {text}"
+            line += f" [grey50]{text}[/grey50]" if locked else f" {text}"
         out.append(line)
     return "\n".join(out) if out else "-"
 

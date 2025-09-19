@@ -61,6 +61,28 @@ def _wrap_runtime(card):
     return _RuntimeCard(card)
 
 
+def _is_squad_goon(card) -> bool:
+    rank = getattr(card, "rank", None)
+    if isinstance(rank, str):
+        return rank.strip().upper() in {"SG", "SQUAD GOON"}
+    return str(getattr(rank, "name", "")).upper() == "SG"
+
+
+def _has_squad_goon_duplicate(player: Player, card) -> bool:
+    if not _is_squad_goon(card):
+        return False
+    name = str(getattr(card, "name", "")).strip().lower()
+    if not name:
+        return False
+    for existing in getattr(player, "board", []):
+        if existing is card:
+            continue
+        other_name = str(getattr(existing, "name", "")).strip().lower()
+        if other_name == name and _is_squad_goon(existing):
+            return True
+    return False
+
+
 def draw(player: Player, n: int = 1) -> List[Card]:
     """Draw up to `n` cards from `player.deck` into `player.hand`."""
     if player is None or n <= 0:
@@ -147,6 +169,10 @@ def deploy_from_hand(
     if gear_cost or meat_cost:
         # Not implemented in this build
         print("could not pay wind")
+        return False
+
+    if _has_squad_goon_duplicate(player, card):
+        print("cannot deploy: squad goon of this type already in play")
         return False
 
     # Pay wind
@@ -821,6 +847,8 @@ def _me_resurrect_from_dead_pool(gs, owner, amount: int, kind: Optional[str], co
         if amount is not None and len(revived) >= int(amount):
             break
         if not _matches(card):
+            continue
+        if _has_squad_goon_duplicate(owner, card):
             continue
         getattr(gs, "dead_pool", []).remove(card)
         try:
