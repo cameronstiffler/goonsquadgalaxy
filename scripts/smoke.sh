@@ -13,8 +13,8 @@ from gsgsim.engine import deploy_from_hand
 from gsgsim.rules import apply_wind
 
 # Build a tiny game state
-narc = build_cards(load_deck_json("narc_deck.json"), faction="NARC")
-pcu  = build_cards(load_deck_json("pcu_deck.json"),  faction="PCU")
+narc = build_cards(load_deck_json("narc_deck_strict.json"), faction="NARC")
+pcu  = build_cards(load_deck_json("pcu_deck_strict.json"),  faction="PCU")
 p1_sl, p2_sl = find_squad_leader(narc), find_squad_leader(pcu)
 p1 = Player("NARC", board=[p1_sl], hand=[c for c in narc if c is not p1_sl][:3], deck=[], retired=[])
 p2 = Player("PCU", board=[p2_sl], hand=[c for c in pcu  if c is not p2_sl][:3], deck=[], retired=[])

@@ -67,7 +67,7 @@ def test_cost_charged_then_success_via_registry(monkeypatch):
     src = mk_card("ProbeX", abilities=[Ability("PING", cost={"wind": 1}, effects=[])])
     bg = mk_card("BG", wind=0)
     gs = types.SimpleNamespace(turn_player=mk_player([bg]))
-    # Pay 1 from BG safely, then run registry handler
+    # Cost paid by the source goon; registry handler still fires
     ok = use_ability(gs, src, 0, None)
     assert ok is True and called["ok"] is True
-    assert bg.wind == 1
+    assert getattr(src, "wind", 0) == 1

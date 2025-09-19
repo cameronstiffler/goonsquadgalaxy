@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -130,7 +131,7 @@ def manual_pay(player, total: int, plan: list[tuple[int, int]], allow_lethal_sl:
     return True
 
 
-def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None):
+def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, contributors: Optional[List[int]] = None):
     """
     Pay `total_cost` wind from player's board (all-or-nothing, transactional, no fallback).
       - Prefer non-SL first, then SL (SL can reach 4 and retire immediately).
@@ -163,6 +164,37 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None):
             return 0
         w = int(getattr(card, "wind", 0) or 0)
         return max(0, 4 - w)
+
+    if contributors:
+        plan_map: Dict[int, int] = {}
+        for idx in contributors:
+            if not isinstance(idx, int):
+                return False
+            plan_map[idx] = plan_map.get(idx, 0) + 1
+        if sum(plan_map.values()) != total_cost:
+            return False
+
+        for idx, amt in plan_map.items():
+            if idx < 0 or idx >= len(board):
+                return False
+            card = board[idx]
+            if has_status(card, "disable_contribution") or cannot_spend_wind(gs, card):
+                return False
+            if capacity(card) < amt:
+                return False
+            if is_sl(card) and int(getattr(card, "wind", 0) or 0) + amt > 3:
+                return False
+
+        for idx, amt in plan_map.items():
+            card = board[idx]
+            for _ in range(amt):
+                if gs is not None:
+                    apply_wind(gs, card, +1)
+                    destroy_if_needed(gs, card)
+                else:
+                    card.wind = int(getattr(card, "wind", 0) or 0) + 1
+
+        return True
 
     # Order: non-SL first, then SL
     order = [c for c in board if not is_sl(c) and capacity(c) > 0] + [c for c in board if is_sl(c) and capacity(c) > 0]

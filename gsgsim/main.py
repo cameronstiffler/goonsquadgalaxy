@@ -19,12 +19,16 @@
 #
 # NOTE: This block never prints; UI owns messaging. It mutates GameState and
 # returns a list of "prompts" when user choices are needed (e.g., pick targets).
+import os
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Tuple
+
+from .engine import init_game
+from .engine import select_ui
 
 
 def _ensure_runtime_containers(gs):
@@ -201,5 +205,23 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable):
 
 
 def main():
-    """Importable entrypoint for package users. CLI uses gsg_sim.py."""
-    return None
+    """Launch the simulator with decks/UI configured from environment flags."""
+
+    def _env_truthy(name: str) -> bool:
+        val = os.environ.get(name)
+        if val is None:
+            return False
+        return val.strip().lower() in {"1", "true", "on", "yes"}
+
+    gs = init_game()
+
+    ui_name = os.environ.get("GSG_UI") or "rich"
+    ui = select_ui(ui_name)
+
+    ai_flag = (os.environ.get("GSG_AI") or "").strip().lower()
+    ai_p1 = ai_flag in {"p1", "both"}
+    ai_p2 = ai_flag in {"p2", "both"}
+    auto = _env_truthy("GSG_AUTO")
+
+    ui.run_loop(gs, ai_p1=ai_p1, ai_p2=ai_p2, auto=auto)
+    return gs

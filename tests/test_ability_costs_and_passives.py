@@ -26,7 +26,7 @@ def test_passive_cannot_be_used(monkeypatch):
 
 
 def test_active_cost_enforced(monkeypatch):
-    # Ability costs 2 wind: with only SL at wind 3, auto-pay should refuse
+    # Ability costs 2 wind: cost should be applied to the source goon only
     from gsgsim.abilities import registers
     from gsgsim.abilities import use_ability
 
@@ -42,9 +42,11 @@ def test_active_cost_enforced(monkeypatch):
     gs.turn_player.board.append(sl)
     c = mk_card("Probe", abilities=[Ability("PING", cost={"wind": 2}, passive=False)])
 
-    # Only lethal SL wind remains -> should refuse (auto planner blocks lethal)
-    assert use_ability(gs, c, 0, None) is False
-    assert called["ok"] is False
+    # Source goon pays its own cost; Squad Leader remains untouched
+    assert use_ability(gs, c, 0, None) is True
+    assert called["ok"] is True
+    assert getattr(c, "wind", 0) == 2
+    assert getattr(sl, "wind", 0) == 3
 
 
 def test_active_cost_succeeds_with_non_sl_sources(monkeypatch):
@@ -61,3 +63,4 @@ def test_active_cost_succeeds_with_non_sl_sources(monkeypatch):
     gs = types.SimpleNamespace(turn_player=mk_player([b1, b2]))
     c = mk_card("Probe2", abilities=[Ability("PING", cost={"wind": 2}, passive=False)])
     assert use_ability(gs, c, 0, None) is True
+    assert getattr(c, "wind", 0) == 2

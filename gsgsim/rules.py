@@ -75,6 +75,61 @@ def destroy_if_needed(gs, card) -> bool:
     if not hasattr(gs, "dead_pool") or gs.dead_pool is None:
         gs.dead_pool = []
     gs.dead_pool.append(card)
+    try:
+        if getattr(card, "biological", False):
+            gs.dead_pool_bio = int(getattr(gs, "dead_pool_bio", 0) or 0) + 1
+        if getattr(card, "mechanical", False):
+            gs.dead_pool_mech = int(getattr(gs, "dead_pool_mech", 0) or 0) + 1
+    except Exception:
+        pass
+
+    dependents = []
+    try:
+        status_map = getattr(card, "status", {}) or {}
+        for token in status_map.get("destroy_dependents", []):
+            dep = token.get("value")
+            if dep and any(dep in getattr(player, "board", []) for player in (getattr(gs, "p1", None), getattr(gs, "p2", None))):
+                dependents.append(dep)
+    except Exception:
+        pass
+
+    attacker = getattr(card, "_destroyed_by", None)
+    if hasattr(card, "_destroyed_by"):
+        try:
+            delattr(card, "_destroyed_by")
+        except Exception:
+            pass
+    retaliate = bool(getattr(card, "_retaliate_on_destroy", False))
+    if retaliate and attacker and attacker is not card:
+        try:
+            destroy_if_needed(gs, attacker)
+        except Exception:
+            pass
+
+    try:
+        from .engine import refresh_board_state  # avoid circular at module load
+
+        refresh_board_state(gs)
+    except Exception:
+        pass
+
+    for dep in dependents:
+        try:
+            destroy_if_needed(gs, dep)
+        except Exception:
+            pass
+
+    try:
+        for player in (getattr(gs, "p1", None), getattr(gs, "p2", None)):
+            if not player:
+                continue
+            for other in list(getattr(player, "board", [])):
+                status_map = getattr(other, "status", {}) or {}
+                for tag, arr in list(status_map.items()):
+                    filtered = [token for token in arr if token.get("value") is not card]
+                    status_map[tag] = filtered
+    except Exception:
+        pass
 
     # If the destroyed card is an SL, mark loser on GameState
     try:
@@ -108,12 +163,24 @@ def can_target_card(gs, source, target, *, hostile: bool) -> bool:
         # cannot_be_targeted blocks hostile targeting entirely
         if has_status(target, "cannot_be_targeted"):
             return False
+        try:
+            owner = None
+            if target in getattr(gs.p1, "board", []):
+                owner = gs.p1
+            elif target in getattr(gs.p2, "board", []):
+                owner = gs.p2
+            if owner is not None and getattr(owner, "_shield_array_protection", False):
+                return False
+        except Exception:
+            pass
         # If any ally on the defending side must_be_destroyed_first, only those may be targeted
         side = getattr(gs, "p1", None) if target in getattr(getattr(gs, "p1", None), "board", []) else getattr(gs, "p2", None)
         if side:
             must_first = [c for c in getattr(side, "board", []) if has_status(c, "must_be_destroyed_first")]
             if must_first and target not in must_first:
                 return False
+        if has_status(target, "cannot_be_targeted_negative"):
+            return False
     tr = _rank_str(target)
     if tr in ("T", "TITAN"):
         return False

@@ -78,7 +78,7 @@
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
     },
     {
-      "name": "Kill Zone Companion",
+      "name": "Mutt",
       "rank": "BG",
       "duplicates": 4,
       "faction": "PCU",
@@ -150,7 +150,7 @@
       ],
       "notes": [],
       "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mutt.jpg",
-      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/mutt.jpg"
     },
     {
       "name": "Void Freak",
@@ -213,6 +213,74 @@
       "notes": [],
       "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/freak.png",
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/freak.jpg"
+    },
+    {
+      "name": "Annihilist Overseer",
+      "rank": "BG",
+      "duplicates": 4,
+      "faction": "PCU",
+      "deploy_cost": {
+        "wind": 4,
+        "gear": 0,
+        "meat": 0
+      },
+      "biological": false,
+      "mechanical": false,
+      "resist": false,
+      "no_unwind": false,
+      "deploy_requirements": [],
+      "abilities": [
+        {
+          "name": "BLIND",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Target Goon may not use abilities or contribute wind on its next turn.",
+          "effects": [
+            {
+              "effect_type": "disable_abilities",
+              "target": [
+                "any"
+              ],
+              "duration": "next_turn"
+            },
+            {
+              "effect_type": "disable_contribution",
+              "target": [
+                "any"
+              ],
+              "duration": "next_turn"
+            }
+          ]
+        },
+        {
+          "name": "BEHEAD",
+          "cost": {
+            "wind": 3,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Destroy target Goon.",
+          "effects": [
+            {
+              "effect_type": "destroy",
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/nives.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/nives.jpg"
     },
     {
       "name": "K\u00e4sekobold",

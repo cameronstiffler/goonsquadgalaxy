@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .engine import deploy_from_hand
 from .engine import end_of_turn
+from .engine import init_game
 from .engine import select_ui
 from .engine import start_of_turn
 from .engine import use_ability_cli
@@ -37,6 +38,7 @@ __all__ = [
     "distribute_wind",
     "apply_wind_with_resist",
     "destroy_if_needed",
+    "init_game",
     "deploy_from_hand",
     "use_ability_cli",
     "start_of_turn",

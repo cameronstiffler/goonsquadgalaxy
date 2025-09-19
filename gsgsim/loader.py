@@ -40,42 +40,77 @@ def build_cards(deck_obj: Dict[str, Any], faction: Optional[str] = None) -> List
         rank = parse_rank(raw.get("rank", "Basic Goon"))
         traits = set(raw.get("icons", []))
 
-        # deploy costs (tokens like "2w", "1g", "3m")
+        # deploy costs (tokens like "2w", "1g", "3m" or schema dict)
         dw = dg = dm = 0
-        for tok in raw.get("deploy_cost", []):
-            s = str(tok or "").strip().lower()
-            m = re.fullmatch(r"(\d+)\s*([wgm])", s)
-            if not m:
-                continue
-            n = int(m.group(1))
-            kind = m.group(2)
-            if kind == "w":
-                dw += n
-            elif kind == "g":
-                dg += n
-            elif kind == "m":
-                dm += n
+        deploy_cost = raw.get("deploy_cost", [])
+
+        def _to_int(val):
+            if isinstance(val, str) and val.strip().upper() == "X":
+                return "X"
+            try:
+                return int(val or 0)
+            except Exception:
+                return 0
+
+        if isinstance(deploy_cost, dict):
+            dw = _to_int(deploy_cost.get("wind", 0))
+            dg = _to_int(deploy_cost.get("gear", 0))
+            dm = _to_int(deploy_cost.get("meat", 0))
+        else:
+            for tok in deploy_cost:
+                s = str(tok or "").strip().lower()
+                m = re.fullmatch(r"(\d+)\s*([wgm])", s)
+                if not m:
+                    continue
+                n = int(m.group(1))
+                kind = m.group(2)
+                if kind == "w":
+                    dw += n
+                elif kind == "g":
+                    dg += n
+                elif kind == "m":
+                    dm += n
 
         abilities: List[Ability] = []
         for a in raw.get("abilities", []):
             cost: Dict[str, int] = {}
             passive = False
-            for ctok in a.get("cost", []):
-                t = str(ctok or "").strip().lower()
-                if t == "p":
-                    passive = True
-                    continue
-                m = re.fullmatch(r"(\d+)\s*([wgm])", t)
-                if not m:
-                    continue
-                n = int(m.group(1))
-                k = m.group(2)
-                key = {"w": "wind", "g": "gear", "m": "meat"}[k]
-                cost[key] = cost.get(key, 0) + n
+            raw_cost = a.get("cost", [])
+            if isinstance(raw_cost, dict):
+                cost = {
+                    "wind": _to_int(raw_cost.get("wind", 0)),
+                    "gear": _to_int(raw_cost.get("gear", 0)),
+                    "meat": _to_int(raw_cost.get("meat", 0)),
+                }
+            else:
+                for ctok in raw_cost:
+                    t = str(ctok or "").strip().lower()
+                    if t == "p":
+                        passive = True
+                        continue
+                    m = re.fullmatch(r"(\d+)\s*([wgm])", t)
+                    if not m:
+                        continue
+                    n = int(m.group(1))
+                    k = m.group(2)
+                    key = {"w": "wind", "g": "gear", "m": "meat"}[k]
+                    cost[key] = cost.get(key, 0) + n
+            if "wind" not in cost:
+                cost["wind"] = cost.get("wind", 0)
+            if "gear" not in cost:
+                cost["gear"] = cost.get("gear", 0)
+            if "meat" not in cost:
+                cost["meat"] = cost.get("meat", 0)
+            passive = bool(a.get("passive", passive))
             # effect inference minimal (keep as-is)
             aname = a.get("name", "ABILITY")
-            ab = Ability(aname, cost, [], passive=passive)
+            effects = a.get("effects", []) or []
+            ab = Ability(aname, cost, effects, passive=passive)
             setattr(ab, "text", a.get("text", ""))
+            try:
+                setattr(ab, "must_use", bool(a.get("must_use", False)))
+            except Exception:
+                pass
             abilities.append(ab)
 
         card = Card(

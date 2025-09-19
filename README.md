@@ -4,7 +4,7 @@ This repository contains a minimal copy of the game simulator used for developme
 
 Included
 - `gsg_sim.py` — simulator core (minimal import copy)
-- `narc_deck.json`, `pcu_deck.json` — starter deck data
+- `narc_deck_strict.json`, `pcu_deck_strict.json` — starter deck data
 - `tests/` — unit tests for burn/deck/ability behavior
 - `.github/workflows/ci.yml` — GitHub Actions to run pytest
 

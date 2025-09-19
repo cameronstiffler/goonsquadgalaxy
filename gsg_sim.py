@@ -13,23 +13,13 @@ from gsgsim import destroy_if_needed
 from gsgsim import distribute_wind
 from gsgsim import end_of_turn
 from gsgsim import find_squad_leader
+from gsgsim import init_game
 from gsgsim import load_deck_json
 from gsgsim import parse_rank
 from gsgsim import select_ui
 from gsgsim import start_of_turn
 from gsgsim import use_ability_cli
 from gsgsim.main import main
-
-
-def _choose_decks(args):
-    import os
-
-    use_strict = bool(getattr(args, "use_strict", False)) or bool(os.environ.get("GSG_USE_STRICT"))
-    if use_strict:
-        return ("pcu_deck_strict.json", "narc_deck_strict.json")
-    # Legacy/default paths
-    return ("pcu_deck.json", "narc_deck.json")
-
 
 __all__ = [
     "Ability",
@@ -45,6 +35,7 @@ __all__ = [
     "distribute_wind",
     "apply_wind_with_resist",
     "destroy_if_needed",
+    "init_game",
     "deploy_from_hand",
     "use_ability_cli",
     "start_of_turn",

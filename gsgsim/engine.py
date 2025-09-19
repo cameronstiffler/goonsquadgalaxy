@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import copy
+import os
+import random
+from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -9,13 +13,19 @@ from typing import Optional
 from typing import Tuple
 
 from .abilities import use_ability
+from .loader import build_cards
+from .loader import find_squad_leader
+from .loader import load_deck_json
+from .models import Card
 from .models import GameState
 from .models import Player
+from .payments import Chooser as PaymentChooser
 from .payments import distribute_wind
+from .rules import apply_wind
 from .rules import cannot_spend_wind
 from .rules import destroy_if_needed
 
-Chooser = Callable[[List[Tuple[int, object, int]], int], Optional[List[Tuple[int, int]]]]
+Chooser = PaymentChooser
 
 
 # --- runtime wrapper for frozen dataclass cards -------------------------------
@@ -51,7 +61,81 @@ def _wrap_runtime(card):
     return _RuntimeCard(card)
 
 
-def deploy_from_hand(gs: GameState, player: Player, hand_idx: int, chooser: Optional[Chooser] = None) -> bool:
+def draw(player: Player, n: int = 1) -> List[Card]:
+    """Draw up to `n` cards from `player.deck` into `player.hand`."""
+    if player is None or n <= 0:
+        return []
+
+    deck = getattr(player, "deck", None)
+    hand = getattr(player, "hand", None)
+    if not isinstance(deck, list) or hand is None:
+        return []
+
+    drawn: List[Card] = []
+    for _ in range(int(n)):
+        if not deck:
+            break
+        card = deck.pop(0)
+        try:
+            card.new_in_hand = True
+        except Exception:
+            pass
+        hand.append(card)
+        drawn.append(card)
+    return drawn
+
+
+def refresh_board_state(gs: GameState) -> None:
+    try:
+        players = [gs.p1, gs.p2]
+    except Exception:
+        players = []
+    for pl in filter(None, players):
+        try:
+            count = sum(1 for c in getattr(pl, "board", []) if str(getattr(c, "name", "")).lower() == "shield array node")
+            setattr(pl, "_shield_array_protection", count >= 2)
+        except Exception:
+            setattr(pl, "_shield_array_protection", False)
+
+
+def _passive_chooser(kind, options):
+    if kind == "choose_targets":
+        pool = options.get("pool", []) if isinstance(options, dict) else []
+        need = options.get("need", ["any"]) if isinstance(options, dict) else ["any"]
+        n = 1
+        if need and need[0].startswith("two"):
+            n = 2
+        if need and need[0].startswith("three"):
+            n = 3
+        return pool[:n]
+    if kind == "distribute_wind":
+        return {}
+    if kind == "search_deck":
+        deck = options if isinstance(options, list) else options.get("deck", [])
+        return deck[0] if deck else None
+    if kind == "select_ability":
+        return 0
+    if kind == "choose_targets_for_copy":
+        return []
+    return []
+
+
+def _apply_passive_abilities(gs: GameState, card: Card) -> None:
+    for ability in getattr(card, "abilities", []) or []:
+        if getattr(ability, "passive", False):
+            try:
+                run_machine_effects(gs, card, ability, chooser=_passive_chooser, preset_targets=None)
+            except Exception:
+                continue
+
+
+def deploy_from_hand(
+    gs: GameState,
+    player: Player,
+    hand_idx: int,
+    chooser: Optional[Chooser] = None,
+    contributors: Optional[List[int]] = None,
+) -> bool:
     if hand_idx < 0 or hand_idx >= len(player.hand):
         print("invalid hand index")
         return False
@@ -66,7 +150,7 @@ def deploy_from_hand(gs: GameState, player: Player, hand_idx: int, chooser: Opti
         return False
 
     # Pay wind
-    if not distribute_wind(player, wind_cost, gs=gs, chooser=chooser):
+    if not distribute_wind(player, wind_cost, gs=gs, chooser=chooser, contributors=contributors):
         return False
     # Move card to board (wrap to allow runtime mutable attrs on frozen dataclasses)
     runtime = _wrap_runtime(card)
@@ -75,7 +159,9 @@ def deploy_from_hand(gs: GameState, player: Player, hand_idx: int, chooser: Opti
     runtime.wind = 0
     runtime.new_this_turn = True
     runtime.just_deployed = True
+    _apply_passive_abilities(gs, runtime)
     _sweep_board_for_kills(gs)
+    refresh_board_state(gs)
     return True
 
 
@@ -86,9 +172,9 @@ def start_of_turn(gs: GameState) -> None:
     if hasattr(p, "deck") and isinstance(p.deck, list):
         if not p.deck:
             print(f"{p.name} loses: deck empty at draw step!")
+            setattr(gs, "loser", getattr(p, "name", "?"))
             return
-        card = p.deck.pop(0)
-        p.hand.append(card)
+        draw(p, 1)
     # Clear new_this_turn and just_deployed on both players' boards
     # inside start_of_turn(gs), early in the function:
 
@@ -100,18 +186,29 @@ def start_of_turn(gs: GameState) -> None:
                 c.new_this_turn = False
             if getattr(c, "ability_used_this_turn", False):
                 c.ability_used_this_turn = False
+            if hasattr(c, "_abilities_used_this_turn"):
+                try:
+                    c._abilities_used_this_turn = set()
+                except Exception:
+                    setattr(c, "_abilities_used_this_turn", set())
+            if hasattr(c, "_abilities_used_this_turn"):
+                try:
+                    c._abilities_used_this_turn = set()
+                except Exception:
+                    setattr(c, "_abilities_used_this_turn", set())
     # Auto-unwind only the current turn player's board, skipping no_unwind
-    from .rules import apply_wind
+    from .rules import apply_wind_with_resist
     from .rules import consume_status
     from .rules import has_status
 
     for c in gs.turn_player.board:
-        if getattr(c, "wind", 0) > 0 and not getattr(c, "no_unwind", False):
+        skip_unwind = getattr(c, "no_unwind", False) or has_status(c, "no_unwind_flag")
+        if getattr(c, "wind", 0) > 0 and not skip_unwind:
             # Enforce prevent_unwind status
             if has_status(c, "prevent_unwind"):
                 consume_status(c, "prevent_unwind", lambda t: t.get("duration") in ("next_unwind", "until_end_of_turn"))
                 continue
-            apply_wind(gs, c, -1)
+            apply_wind_with_resist(gs, c, -1, hostile=False)
 
     # Clean up until_end_of_turn and next_turn statuses
     for side in (gs.p1, gs.p2):
@@ -127,6 +224,11 @@ def start_of_turn(gs: GameState) -> None:
                 status[tag] = [t for t in arr if not (t.get("duration") == "next_turn" and t.get("turn_tag") == gs.turn_number - 1)]
                 if not status[tag]:
                     status.pop(tag)
+            if "marked" not in status and getattr(c, "marked", False):
+                try:
+                    delattr(c, "marked")
+                except Exception:
+                    c.marked = False
 
 
 def _clear_turn_locks(gs):
@@ -176,6 +278,7 @@ def use_ability_cli(gs, src_idx: int, abil_idx: int, target_spec: str | None = N
         print("ability failed")
         return
     targets = parse_targets(target_spec or "", gs)
+    print(f"DEBUG: use_ability called for {getattr(card, 'name', '?')} abil {abil_idx}")
     ok = use_ability(gs, card, abil_idx, targets)
     print("ability ok" if ok else f'ability failed (passive/new/handler/cost): {getattr(card, "name", "<??>")} [{abil_idx}]')
     _sweep_board_for_kills(gs)
@@ -248,25 +351,18 @@ def pay_cli(gs, amount: int, spec: str) -> None:
 
 
 # === canonical wind mutation and checks (rules-backed) ===
-def add_wind_and_check(gs, card, delta: int) -> int:
+def add_wind_and_check(gs, card, delta: int, *, hostile: bool = False) -> int:
     """Mutate wind by delta. KO and retire at >= 4. Return applied delta."""
-    old = int(getattr(card, "wind", 0) or 0)
-    new = max(0, old + int(delta))
-    card.wind = new
+    from .rules import apply_wind_with_resist
+    from .rules import destroy_if_needed
 
-    # KO at 4+ wind
-    if new >= 4:
-        owner = None
-        if hasattr(gs, "p1") and card in getattr(gs.p1, "board", []):
-            owner = gs.p1
-        elif hasattr(gs, "p2") and card in getattr(gs.p2, "board", []):
-            owner = gs.p2
-        if owner:
-            try:
-                owner.board.remove(card)
-            except ValueError:
-                pass
-            owner.retired.append(card)
+    old = int(getattr(card, "wind", 0) or 0)
+    apply_wind_with_resist(gs, card, int(delta), hostile=hostile)
+    new = int(getattr(card, "wind", 0) or 0)
+    try:
+        destroy_if_needed(gs, card)
+    except Exception:
+        pass
     return new - old
 
 
@@ -275,6 +371,8 @@ def manual_pay(gs, total: int, targets: list[tuple[str, int]]) -> bool:
     Spend 'total' wind across target board indices (p1|p2,idx).
     Applies KO-at-4 immediately via add_wind_and_check.
     """
+    from .rules import apply_wind_with_resist
+
     if total <= 0:
         return True
 
@@ -289,14 +387,12 @@ def manual_pay(gs, total: int, targets: list[tuple[str, int]]) -> bool:
             pool.append(c)
 
     paid = 0
-    # greedy round-robin, 1 wind at a time
     while paid < total and pool:
         progressed, next_pool = False, []
         for c in pool:
-            # skip if already retired
             if c not in getattr(gs.p1, "board", []) and c not in getattr(gs.p2, "board", []):
                 continue
-            add_wind_and_check(gs, c, +1)
+            apply_wind_with_resist(c, +1, hostile=True)
             paid += 1
             progressed = True
             if (c in getattr(gs.p1, "board", []) or c in getattr(gs.p2, "board", [])) and not cannot_spend_wind(c):
@@ -316,6 +412,146 @@ def manual_pay_cli(gs, amount: int, target_spec: str) -> None:
     targets = parse_targets(target_spec, gs)
     ok = manual_pay(gs, amount, targets)
     print("pay ok" if ok else "pay failed (insufficient eligible goons)")
+
+
+def _resolve_deck_path(raw: str, root: Path) -> Path:
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    return path
+
+
+def _expand_deck_cards(deck_obj: Dict[str, Any]) -> List[Card]:
+    base_cards = build_cards(deck_obj, faction=deck_obj.get("faction"))
+    goons_raw = deck_obj.get("goons", []) or []
+    expanded: List[Card] = []
+    for idx, card in enumerate(base_cards):
+        copies_raw = 1
+        if idx < len(goons_raw):
+            copies_raw = goons_raw[idx].get("duplicates", 1)
+        try:
+            copies = int(copies_raw)
+        except Exception:
+            copies = 1
+        if copies <= 0:
+            copies = 1
+        for _ in range(copies):
+            expanded.append(copy.deepcopy(card))
+    return expanded
+
+
+def _pop_squad_leader(deck: List[Card]) -> Optional[Card]:
+    sl = find_squad_leader(deck)
+    if sl is not None:
+        try:
+            deck.remove(sl)
+        except ValueError:
+            pass
+    return sl
+
+
+class _RulesFacade:
+    def __init__(self, gs: GameState) -> None:
+        self._gs = gs
+
+    def apply_wind(self, card: Card, delta: int) -> int:
+        return apply_wind(self._gs, card, delta)
+
+    def destroy_goon(self, card: Card) -> bool:
+        return destroy_if_needed(self._gs, card)
+
+
+def init_game(
+    *,
+    p1_deck: Optional[str] = None,
+    p2_deck: Optional[str] = None,
+    rng_seed: Optional[int] = None,
+    starting_hand_size: int = 6,
+) -> GameState:
+    """Construct a fresh `GameState` with decks loaded and ready to play."""
+
+    root = Path(__file__).resolve().parent.parent
+
+    default_p1, default_p2 = ("pcu_deck_strict.json", "narc_deck_strict.json")
+    deck1_raw = p1_deck or default_p1
+    deck2_raw = p2_deck or default_p2
+
+    deck1_path = _resolve_deck_path(deck1_raw, root)
+    deck2_path = _resolve_deck_path(deck2_raw, root)
+
+    if not deck1_path.exists():
+        raise FileNotFoundError(f"Deck not found for P1: {deck1_path}")
+    if not deck2_path.exists():
+        raise FileNotFoundError(f"Deck not found for P2: {deck2_path}")
+
+    deck1_obj = load_deck_json(str(deck1_path))
+    deck2_obj = load_deck_json(str(deck2_path))
+
+    cards_p1 = _expand_deck_cards(deck1_obj)
+    cards_p2 = _expand_deck_cards(deck2_obj)
+
+    if rng_seed is None:
+        seed_env = os.environ.get("GSG_RNG_SEED")
+        if seed_env:
+            try:
+                rng_seed = int(seed_env)
+            except Exception:
+                rng_seed = None
+    rng = random.Random(rng_seed)
+    rng.shuffle(cards_p1)
+    rng.shuffle(cards_p2)
+
+    p1 = Player(name="P1")
+    p2 = Player(name="P2")
+    p1.deck = cards_p1
+    p2.deck = cards_p2
+    p1.hand = []
+    p2.hand = []
+    p1.board = []
+    p2.board = []
+    p1.retired = []
+    p2.retired = []
+    setattr(p1, "faction", deck1_obj.get("faction"))
+    setattr(p2, "faction", deck2_obj.get("faction"))
+    setattr(p1, "controller", "human")
+    setattr(p2, "controller", "human")
+
+    sl1 = _pop_squad_leader(p1.deck)
+    sl2 = _pop_squad_leader(p2.deck)
+    if sl1 is not None:
+        sl1 = _wrap_runtime(sl1)
+        sl1.wind = int(getattr(sl1, "wind", 0) or 0)
+        sl1.just_deployed = False
+        sl1.new_this_turn = False
+        p1.board.append(sl1)
+    if sl2 is not None:
+        sl2 = _wrap_runtime(sl2)
+        sl2.wind = int(getattr(sl2, "wind", 0) or 0)
+        sl2.just_deployed = False
+        sl2.new_this_turn = False
+        p2.board.append(sl2)
+
+    draw(p1, starting_hand_size)
+    draw(p2, starting_hand_size)
+
+    gs = GameState(p1=p1, p2=p2, turn_player=p1, phase="main", turn_number=1, rng=rng)
+    gs.dead_pool = []
+    gs.dead_pool_bio = 0
+    gs.dead_pool_mech = 0
+    gs.rules = _RulesFacade(gs)
+
+    def _gs_draw(player: Player, n: int = 1) -> List[Card]:
+        return draw(player, n)
+
+    gs.draw = _gs_draw
+    gs.deck_paths = {"p1": str(deck1_path), "p2": str(deck2_path)}
+
+    for goon in list(getattr(gs.p1, "board", [])) + list(getattr(gs.p2, "board", [])):
+        _apply_passive_abilities(gs, goon)
+
+    _sweep_board_for_kills(gs)
+    refresh_board_state(gs)
+    return gs
 
 
 # === MACHINE EFFECTS (Wave A) ==================================================
@@ -377,22 +613,38 @@ def _me_status_for(goon):
 
 
 def _me_owner_of(gs, goon):
-    if goon in gs.p1.board or goon in gs.p1.hand or goon in gs.p1.deck:
-        return gs.p1
-    return gs.p2
+    # Defensive: tests may pass a lightweight gs (e.g., SimpleNamespace) with only turn_player
+    try:
+        if hasattr(gs, "p1") and hasattr(gs, "p2"):
+            if goon in getattr(gs.p1, "board", []) or goon in getattr(gs.p1, "hand", []) or goon in getattr(gs.p1, "deck", []):
+                return gs.p1
+            if goon in getattr(gs.p2, "board", []) or goon in getattr(gs.p2, "hand", []) or goon in getattr(gs.p2, "deck", []):
+                return gs.p2
+    except Exception:
+        pass
+    # Fallback to current turn player when full state isn't present
+    return getattr(gs, "turn_player", None) or getattr(gs, "p1", None) or getattr(gs, "p2", None)
 
 
 def _me_opponent_of(gs, player):
-    return gs.p2 if player is gs.p1 else gs.p1
+    if hasattr(gs, "p1") and hasattr(gs, "p2"):
+        return gs.p2 if player is gs.p1 else gs.p1
+    # If opponents aren't modeled (tests), just return the same player
+    return player
 
 
 def _me_all_goons(gs) -> List[Any]:
-    return list(gs.p1.board) + list(gs.p2.board)
+    if hasattr(gs, "p1") and hasattr(gs, "p2"):
+        return list(getattr(gs.p1, "board", [])) + list(getattr(gs.p2, "board", []))
+    # Minimal harness (tests) — use turn_player only
+    tp = getattr(gs, "turn_player", None)
+    return list(getattr(tp, "board", [])) if tp else []
 
 
-def _me_filter_by_tokens(gs, source, tokens: List[str]) -> List[Any]:
+def _me_filter_by_tokens(gs, source, tokens: List[str], context: Optional[Dict[str, Any]] = None) -> List[Any]:
     # Simple resolver for Wave A. When ambiguous (e.g., "any"), the caller/chooser must pick.
     out: List[Any] = []
+    context = context or {}
     owner = _me_owner_of(gs, source)
     opp = _me_opponent_of(gs, owner)
     for tok in tokens:
@@ -409,11 +661,15 @@ def _me_filter_by_tokens(gs, source, tokens: List[str]) -> List[Any]:
         elif tok == "dead_pool":
             # Represent the shared Dead Pool as a tuple marker; Wave B can expand if needed.
             out.append(("dead_pool",))
+        elif tok == "goon_using_ability":
+            out.append(source)
         elif tok.startswith("card_name:"):
             name = tok.split(":", 1)[1]
             for g in _me_all_goons(gs):
                 if getattr(g, "name", None) == name:
                     out.append(g)
+        elif tok == "revived_by_self":
+            out.extend(context.get("revived", []))
         elif tok in ("any", "two_goons", "three_goons"):
             # chooser must handle these
             out.append(("CHOOSE", tok))
@@ -423,37 +679,78 @@ def _me_filter_by_tokens(gs, source, tokens: List[str]) -> List[Any]:
     return out
 
 
-def _me_register_duration(targets: Iterable[Any], tag: str, value: Any, duration: str):
+def _me_register_duration(targets: Iterable[Any], tag: str, value: Any, duration: str, turn_number: Optional[int] = None):
     for t in targets:
         if isinstance(t, tuple):  # markers like ('dead_pool',) or ('CHOOSE', …)
             continue
         st = _me_status_for(t)
         arr = st.setdefault(tag, [])
-        arr.append({"value": value, "duration": duration})
+        token = {"value": value, "duration": duration}
+        if duration == "next_turn" and turn_number is not None:
+            token["turn_tag"] = turn_number
+        arr.append(token)
 
 
-def _me_apply_alter_wind(gs, targets: List[Any], amount, chooser) -> None:
-    # amount can be int or "X" (chooser must supply actual distribution for X)
-    from .engine import add_wind_and_check  # local canonical wind mutation
+def _me_apply_alter_wind(gs, source, owner, targets: List[Any], amount, chooser) -> None:
+    from .rules import apply_wind_with_resist
 
     if amount == "X":
-        # Expect chooser to return a dict {goon: int}
-        dist = chooser("distribute_wind", targets)
-        for goon, delta in (dist or {}).items():
-            add_wind_and_check(gs, goon, int(delta))
-    else:
-        for t in targets:
-            if isinstance(t, tuple):
+        dist = chooser("distribute_wind", targets) or {}
+        for goon, delta in dist.items():
+            if isinstance(goon, tuple):
                 continue
-            add_wind_and_check(gs, t, int(amount))
+            _me_apply_alter_wind(gs, source, owner, [goon], delta, chooser)
+        return
+
+    for t in targets:
+        if isinstance(t, tuple):
+            continue
+        amt = int(amount)
+        hostile = amt > 0 and _me_is_hostile(gs, owner, t)
+        if hostile and amt > 0:
+            status = getattr(t, "status", {}) or {}
+            redirects = status.get("redirect_damage", [])
+            redirected = False
+            for token in redirects:
+                partner = token.get("value")
+                if partner and partner is not t and partner in getattr(owner, "board", []):
+                    apply_wind_with_resist(gs, partner, amt, hostile=True)
+                    redirected = True
+                    break
+            if redirected:
+                continue
+        if hostile and amt > 0:
+            bonus = 0
+            try:
+                status = getattr(t, "status", {}) or {}
+                for token in status.get("increase_damage_taken", []):
+                    bonus += int(token.get("value", 0) or 0)
+            except Exception:
+                pass
+            amt += bonus
+        if hostile and amt > 0:
+            try:
+                setattr(t, "_destroyed_by", source)
+            except Exception:
+                pass
+        apply_wind_with_resist(gs, t, amt, hostile=hostile)
+        if getattr(t, "wind", 0) < 4 and hasattr(t, "_destroyed_by") and getattr(t, "_destroyed_by") is source:
+            try:
+                delattr(t, "_destroyed_by")
+            except Exception:
+                pass
 
 
-def _me_apply_destroy(gs, targets: List[Any]) -> None:
+def _me_apply_destroy(gs, source, targets: List[Any]) -> None:
     from .rules import destroy_if_needed
 
     for t in targets:
         if isinstance(t, tuple):
             continue
+        try:
+            setattr(t, "_destroyed_by", source)
+        except Exception:
+            pass
         destroy_if_needed(gs, t)
 
 
@@ -477,7 +774,129 @@ def _me_apply_search_deck(gs, player, chooser):
         player.deck.reverse()
 
 
-def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable):
+def _me_banish_from_dead_pool(gs, amount: int, kind: str) -> bool:
+    if amount <= 0:
+        return True
+    attr = None
+    if kind == "biological":
+        attr = "dead_pool_bio"
+    elif kind == "mechanical":
+        attr = "dead_pool_mech"
+    if not attr:
+        return True
+    current = int(getattr(gs, attr, 0) or 0)
+    if current < amount:
+        return False
+    setattr(gs, attr, current - amount)
+    return True
+
+
+def _me_parse_csv(value: str) -> List[str]:
+    if not value:
+        return []
+    return [piece.strip() for piece in str(value).split(",") if piece.strip()]
+
+
+def _me_is_hostile(gs, owner, target) -> bool:
+    opp = _me_opponent_of(gs, owner)
+    return target in getattr(opp, "board", [])
+
+
+def _me_resurrect_from_dead_pool(gs, owner, amount: int, kind: Optional[str], context: Dict[str, Any]):
+    pool = list(getattr(gs, "dead_pool", []) or [])
+    revived: List[Any] = []
+
+    kind = (kind or "").strip().lower()
+
+    def _matches(card):
+        if not kind:
+            return True
+        if kind in ("gear", "mechanical"):
+            return bool(getattr(card, "mechanical", False))
+        if kind in ("meat", "biological"):
+            return bool(getattr(card, "biological", False))
+        return True
+
+    for card in list(pool):
+        if amount is not None and len(revived) >= int(amount):
+            break
+        if not _matches(card):
+            continue
+        getattr(gs, "dead_pool", []).remove(card)
+        try:
+            card.wind = 0
+            card.new_this_turn = True
+            card.just_deployed = True
+        except Exception:
+            pass
+        try:
+            if getattr(card, "biological", False):
+                gs.dead_pool_bio = max(0, int(getattr(gs, "dead_pool_bio", 0) or 0) - 1)
+            if getattr(card, "mechanical", False):
+                gs.dead_pool_mech = max(0, int(getattr(gs, "dead_pool_mech", 0) or 0) - 1)
+        except Exception:
+            pass
+        owner.board.append(card)
+        revived.append(card)
+
+    return revived
+
+
+def _me_copy_and_cast(gs, owner, targets: List[Any], chooser: Callable) -> None:
+    from .abilities import use_ability
+
+    target = next((t for t in targets if not isinstance(t, tuple)), None)
+    if target is None:
+        return
+    abilities = list(getattr(target, "abilities", []) or [])
+    if not abilities:
+        return
+
+    payload = {"card": target, "abilities": abilities}
+    idx = chooser("select_ability", payload)
+    try:
+        ability_idx = int(idx)
+    except Exception:
+        ability_idx = 0
+    if not (0 <= ability_idx < len(abilities)):
+        ability_idx = 0
+
+    choice = chooser(
+        "choose_targets_for_copy",
+        {
+            "source": target,
+            "ability": abilities[ability_idx],
+            "pool": _me_all_goons(gs),
+            "need": ["any"],
+        },
+    )
+    if isinstance(choice, list):
+        new_targets = choice
+    elif choice is None:
+        new_targets = []
+    else:
+        new_targets = [choice]
+
+    original_turn_player = gs.turn_player
+    owning_player = _me_owner_of(gs, target)
+    try:
+        if owning_player is not None:
+            gs.turn_player = owning_player
+        use_ability(gs, target, ability_idx, new_targets)
+    finally:
+        gs.turn_player = original_turn_player
+
+
+def _me_apply_conditional_protection(gs, owner, condition: str) -> None:
+    cond = str(condition or "")
+    if cond.lower() == "shield_array_nodes>=2":
+        board = getattr(owner, "board", [])
+        count = sum(1 for c in board if str(getattr(c, "name", "")).lower() == "shield array node")
+        setattr(owner, "_shield_array_protection", count >= 2)
+        refresh_board_state(gs)
+
+
+def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, preset_targets: Optional[List[Any]] = None):
     """
     Apply all Wave A effects for a single ability. `chooser(kind, options)` is a
     callback the UI supplies to resolve 'any'/'two_goons'/'three_goons' and 'X'.
@@ -495,6 +914,15 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable):
 
     owner = _me_owner_of(gs, source)
     prompts: List[Tuple[str, Any]] = []
+    context: Dict[str, Any] = {"revived": []}
+
+    try:
+        setattr(gs, "_current_effect_source", source)
+    except Exception:
+        pass
+
+    preset = list(preset_targets or [])
+    preset_idx = 0
 
     for eff in effects:
         # >>>> IMPORTANT: dataclass-safe access <<<<
@@ -506,14 +934,32 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable):
         amount = eff.get("amount", None)
 
         # Resolve targets
-        resolved = _me_filter_by_tokens(gs, source, tokens)
+        resolved = _me_filter_by_tokens(gs, source, tokens, context)
 
         # Let chooser resolve any ambiguous tokens
         needs_choice = [t for t in resolved if isinstance(t, tuple) and t[0] == "CHOOSE"]
         if needs_choice:
-            choice = chooser("choose_targets", {"source": source, "ability": ability, "need": [t[1] for t in needs_choice], "pool": _me_all_goons(gs)})
+            choice: List[Any] = []
+            while preset_idx < len(preset) and len(choice) < len(needs_choice):
+                choice.append(preset[preset_idx])
+                preset_idx += 1
+            if len(choice) < len(needs_choice):
+                extra = chooser(
+                    "choose_targets",
+                    {
+                        "source": source,
+                        "ability": ability,
+                        "need": [t[1] for t in needs_choice],
+                        "pool": _me_all_goons(gs),
+                    },
+                )
+                extra_list = extra if isinstance(extra, list) else [extra]
+                for item in extra_list:
+                    if len(choice) >= len(needs_choice):
+                        break
+                    choice.append(item)
             new_resolved = []
-            it = iter(choice if isinstance(choice, list) else [choice])
+            it = iter(choice)
             for t in resolved:
                 if isinstance(t, tuple) and t[0] == "CHOOSE":
                     try:
@@ -526,31 +972,87 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable):
 
         # Execute effect
         if et == "alter_wind":
-            _me_apply_alter_wind(gs, resolved, amount, chooser)
+            _me_apply_alter_wind(gs, source, owner, resolved, amount, chooser)
         elif et == "prevent_unwind":
-            _me_register_duration(resolved, "prevent_unwind", True, duration)
+            _me_register_duration(resolved, "prevent_unwind", True, duration, gs.turn_number)
         elif et == "disable_abilities":
-            _me_register_duration(resolved, "disable_abilities", True, duration)
+            _me_register_duration(resolved, "disable_abilities", True, duration, gs.turn_number)
         elif et == "disable_contribution":
-            _me_register_duration(resolved, "disable_contribution", True, duration)
+            _me_register_duration(resolved, "disable_contribution", True, duration, gs.turn_number)
         elif et == "destroy":
-            _me_apply_destroy(gs, resolved)
+            _me_apply_destroy(gs, source, resolved)
         elif et == "retire_on_destroy":
-            _me_register_duration(resolved, "retire_on_destroy", True, duration)
+            _me_register_duration(resolved, "retire_on_destroy", True, duration, gs.turn_number)
         elif et == "return_to_hand_on_destroy":
-            _me_register_duration(resolved, "return_to_hand_on_destroy", True, duration)
+            _me_register_duration(resolved, "return_to_hand_on_destroy", True, duration, gs.turn_number)
         elif et == "grant_resist":
-            _me_register_duration(resolved, "resist", True, duration)
+            _me_register_duration(resolved, "resist", True, duration, gs.turn_number)
         elif et == "cannot_be_targeted":
-            _me_register_duration(resolved, "cannot_be_targeted", True, duration)
+            _me_register_duration(resolved, "cannot_be_targeted", True, duration, gs.turn_number)
         elif et == "must_be_destroyed_first":
-            _me_register_duration(resolved, "must_be_destroyed_first", True, duration)
+            _me_register_duration(resolved, "must_be_destroyed_first", True, duration, gs.turn_number)
         elif et == "search_deck":
             _me_apply_search_deck(gs, owner, chooser)
         elif et == "draw_cards":
             _me_apply_draw(gs, owner, int(amount or 1))
+        elif et == "banish_from_dead_pool":
+            kind = str(eff.get("value") or "").strip().lower()
+            _me_banish_from_dead_pool(gs, int(amount or 0), kind)
+        elif et == "destroy_attacker_on_destroy":
+            for t in resolved:
+                if isinstance(t, tuple):
+                    continue
+                setattr(t, "_retaliate_on_destroy", True)
+        elif et == "enable_double_use_against_target":
+            _me_register_duration(resolved, "double_use_against", True, duration, gs.turn_number)
+        elif et == "mark_target":
+            _me_register_duration(resolved, "marked", source, duration, gs.turn_number)
+            for t in resolved:
+                if isinstance(t, tuple):
+                    continue
+                try:
+                    setattr(t, "marked", True)
+                except Exception:
+                    pass
+        elif et == "increase_damage_taken":
+            _me_register_duration(resolved, "increase_damage_taken", int(amount or 0), duration, gs.turn_number)
+        elif et == "reduce_cost_for_cards_against_marked":
+            _me_register_duration(resolved, "mark_cost_reduction", _me_parse_csv(eff.get("value", "")), duration, gs.turn_number)
+        elif et == "copy_and_cast_target_ability":
+            _me_copy_and_cast(gs, owner, resolved, chooser)
+        elif et == "conditional_cannot_be_targeted_by_negative_effects":
+            _me_apply_conditional_protection(gs, owner, eff.get("value"))
+        elif et == "enable_contribution":
+            _me_register_duration(resolved, "enable_contribution", source, duration, gs.turn_number)
+        elif et == "destroy_self_if_target_destroyed":
+            for t in resolved:
+                if isinstance(t, tuple):
+                    continue
+                status = _me_status_for(t)
+                arr = status.setdefault("destroy_dependents", [])
+                token = {"value": source, "duration": duration}
+                if duration == "next_turn":
+                    token["turn_tag"] = gs.turn_number
+                arr.append(token)
+        elif et == "grant_followup_on_destroy":
+            _me_register_duration([source], "grant_followup_on_destroy", {"amount": int(amount or 0), "target": tokens}, duration, gs.turn_number)
+        elif et == "must_attack":
+            _me_register_duration(resolved, "must_attack", True, duration, gs.turn_number)
+        elif et == "no_unwind":
+            _me_register_duration(resolved, "no_unwind_flag", True, duration, gs.turn_number)
+        elif et == "redirect_damage":
+            _me_register_duration(resolved, "redirect_damage", source, duration, gs.turn_number)
+        elif et == "resurrect_from_dead_pool":
+            revived = _me_resurrect_from_dead_pool(gs, owner, int(amount or 1), eff.get("value"), context)
+            context.setdefault("revived", []).extend(revived)
         else:
             # Unknown (Wave B or beyond): ignore here.
+            pass
+
+    if hasattr(gs, "_current_effect_source"):
+        try:
+            delattr(gs, "_current_effect_source")
+        except Exception:
             pass
 
     return prompts

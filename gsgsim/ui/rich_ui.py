@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from rich.console import Console
 from rich.table import Table
 
@@ -21,6 +23,14 @@ def _ui_chooser_for_interpreter(gs):
             return distribute_wind_via_ui(gs, options)
         if kind == "search_deck":
             return pick_from_deck_via_ui(gs, options)
+        if kind == "select_ability":
+            abilities = options.get("abilities", []) if isinstance(options, dict) else []
+            for idx, ability in enumerate(abilities):
+                if not getattr(ability, "passive", False):
+                    return idx
+            return 0
+        if kind == "choose_targets_for_copy":
+            return select_targets_via_existing_ui(gs, options)
         return []
 
     return chooser
@@ -113,7 +123,7 @@ def _bio_mech_icon(card: Card) -> str:
     if _is_true(card, "biological", "is_bio", "bio") or _icons_has(card, "biological"):
         out.append("🥩")
     if _is_true(card, "mechanical", "is_mech", "mech") or _icons_has(card, "mechanical"):
-        out.append("⚙️")
+        out.append("⚙️ ")
     return "".join(out)
 
 
@@ -237,7 +247,9 @@ class RichUI:
     def _print_command_banner(self, cheats_enabled: bool = False) -> None:
         banner = (
             "[bold cyan]Goon Squad Galaxy Simulator[/bold cyan]\n"
-            "Commands: [bold]help[/bold] | [bold]quit[/bold](q) | [bold]end[/bold](e) | [bold]dN[/bold]|[bold]d N[/bold] | [bold]ddN[/bold]|[bold]dd N[/bold] | [bold]u <src> <abil>[/bold] | [bold]pay <amount> p1|p2:idx[,idx][/bold] | [bold]ai[/bold] [p1|p2]"  # noqa: E501
+            "Commands: [bold]help[/bold] | [bold]quit[/bold](q) | [bold]end[/bold](e) | [bold]dN[/bold][contributors...] | [bold]ddN[/bold]|[bold]dd N[/bold]\n"
+            "[bold]u <src> <abil>[/bold] | [bold]pay <amount> p1|p2:idx[,idx][/bold] | [bold]ai[/bold] [p1|p2]\n"
+            "Alt ability syntax: [bold]uN A>targets[/bold] (enemy) or [bold]uN A<targets[/bold] (ally), e.g. u2 0>3 4"
         )
         if cheats_enabled:
             banner += " | [bold]kill[/bold] p1|p2 <idx> (k)"
@@ -249,9 +261,84 @@ class RichUI:
             (
                 "[bold]Tip:[/bold] Type [bold]ai[/bold] to have the [bold]current player[/bold] act once.\n"
                 "Use [bold]ai p1[/bold] or [bold]ai p2[/bold] to target a side.\n"
-                "Deploy with [bold]dN[/bold] or [bold]d N[/bold]; end turn with [bold]e[/bold] or [bold]end[/bold]."
+                "Deploy with [bold]dN[/bold] (you can list contributors: e.g. d0 0 1 1); end turn with [bold]e[/bold] or [bold]end[/bold]."
             )
         )
+
+    @staticmethod
+    def _ability_can_fire(gs, card, ability) -> bool:
+        from ..rules import cannot_spend_wind
+        from ..rules import has_status
+
+        if getattr(card, "new_this_turn", False):
+            return False
+        if has_status(card, "disable_abilities"):
+            return False
+
+        cost = (getattr(ability, "cost", {}) or {}).get("wind", 0)
+        try:
+            cost_value = int(cost or 0)
+        except Exception:
+            if isinstance(cost, str) and cost.strip().upper() == "X":
+                cost_value = 0
+            else:
+                cost_value = 0
+
+        if cost_value <= 0:
+            return True
+
+        try:
+            current = int(getattr(card, "wind", 0) or 0)
+        except Exception:
+            current = 0
+
+        total_capacity = max(0, 4 - current)
+
+        status_map = getattr(card, "status", {}) or {}
+        board = getattr(getattr(gs, "turn_player", None), "board", []) or []
+
+        for token in status_map.get("enable_contribution", []):
+            contributor = token.get("value")
+            if contributor not in board:
+                continue
+            if has_status(contributor, "disable_contribution"):
+                continue
+            if cannot_spend_wind(gs, contributor):
+                continue
+            try:
+                contrib_wind = int(getattr(contributor, "wind", 0) or 0)
+            except Exception:
+                contrib_wind = 0
+            total_capacity += max(0, 4 - contrib_wind)
+
+        if has_status(card, "disable_contribution"):
+            return False
+        if cannot_spend_wind(gs, card):
+            return total_capacity >= cost_value
+
+        return total_capacity >= cost_value
+
+    @staticmethod
+    def _pending_must_use(gs):
+        from ..rules import has_status
+
+        player = getattr(gs, "turn_player", None)
+        if player is None:
+            return None
+        for card in getattr(player, "board", []):
+            abilities = getattr(card, "abilities", []) or []
+            used = set(getattr(card, "_abilities_used_this_turn", set()))
+            for idx, ability in enumerate(abilities):
+                if not getattr(ability, "must_use", False):
+                    continue
+                if idx in used:
+                    continue
+                if has_status(card, "disable_abilities"):
+                    continue
+                if not RichUI._ability_can_fire(gs, card, ability):
+                    continue
+                return card, ability
+        return None
 
     def _check_game_over(self, gs: GameState) -> bool:
         # First, check for loser marked on GameState
@@ -288,13 +375,17 @@ class RichUI:
                 )
             return t
 
-        c.print(board_table("Board P1", gs.p1))
-        c.print(board_table("Board P2", gs.p2))
+        if gs.turn_player is gs.p1:
+            c.print(board_table("Board P2", gs.p2))
+            c.print(board_table("Board P1", gs.p1))
+        else:
+            c.print(board_table("Board P1", gs.p1))
+            c.print(board_table("Board P2", gs.p2))
 
         # Dead Pool HUD line (always show counters)
         bio = getattr(gs, "dead_pool_bio", 0)
         mech = getattr(gs, "dead_pool_mech", 0)
-        c.print(f"Dead Pool 🥩:{bio} ⚙️:{mech}")
+        c.print(f"Dead Pool 🥩:{bio} ⚙️ :{mech}")
 
         def hand_table(title: str, player) -> Table:
             t = Table(title=f"{title} hand ({len(player.hand)})")
@@ -409,6 +500,11 @@ class RichUI:
                 break
 
             if line in ("end", "e"):
+                pending = self._pending_must_use(gs)
+                if pending:
+                    card, ability = pending
+                    self.console.print(f"[bold red]{getattr(card, 'name', 'Goon')} must use {getattr(ability, 'name', 'ability')} before ending the turn.[/bold red]")
+                    continue
                 end_of_turn(gs)
                 continue
 
@@ -438,16 +534,51 @@ class RichUI:
             # deploy shortcuts: dN | d N | ddN
             kind, idx = _parse_d_cmd(parts[0]) if parts else (None, None)
             if kind and idx is not None:
-                # allow "d N" form
-                if parts[0] == "d" and len(parts) >= 2 and parts[1].isdigit():
-                    idx = int(parts[1])
-
+                contributions = []
+                if parts[0].startswith("d") and len(parts) > 1:
+                    try:
+                        contributions = [int(tok) for tok in parts[1:] if tok.isdigit()]
+                    except Exception:
+                        contributions = []
                 try:
-                    ok = deploy_from_hand(gs, gs.turn_player, idx)
+                    if contributions:
+                        ok = deploy_from_hand(gs, gs.turn_player, idx, contributors=contributions)
+                    else:
+                        ok = deploy_from_hand(gs, gs.turn_player, idx)
                     print("deploy ok" if ok else "deploy failed: cannot pay / illegal")
                 except Exception as e:
                     print(f"deploy error: {e}")
                 continue
+
+            # New compact ability syntax: u{src} {abil}{arrow}{target...}
+            if parts:
+                first = parts[0]
+                if first.startswith("u") and len(first) > 1 and first[1:].isdigit() and len(parts) >= 2:
+                    src = int(first[1:])
+                    arrow_match = re.match(r"^(\d+)([<>])(\d+)$", parts[1])
+                    if arrow_match:
+                        abil = int(arrow_match.group(1))
+                        arrow = arrow_match.group(2)
+                        targets = [int(arrow_match.group(3))]
+                        extra_targets = []
+                        for tok in parts[2:]:
+                            if tok.isdigit():
+                                extra_targets.append(int(tok))
+                            else:
+                                break
+                        targets.extend(extra_targets)
+
+                        if arrow == ">":
+                            side = "p2" if gs.turn_player is gs.p1 else "p1"
+                        else:
+                            side = "p1" if gs.turn_player is gs.p1 else "p2"
+
+                        spec = None
+                        if targets:
+                            spec = f"{side}:{','.join(str(t) for t in targets)}"
+
+                        use_ability_cli(gs, src, abil, spec)
+                        continue
 
             if len(parts) >= 3 and parts[0] == "u" and parts[1].isdigit() and parts[2].isdigit():
                 src = int(parts[1])
@@ -465,5 +596,7 @@ class RichUI:
                 continue
 
             self.console.print(
-                "commands: help | quit(q) | end(e) | dN|d N | ddN|dd N | " "u <src> <abil> | pay <amount> p1|p2:idx[,idx] | ai [p1|p2]  " "(start flags: --ai p1|p2|both, --auto)  See: gamerules.md"
+                "commands: help | quit(q) | end(e) | dN|d N | ddN|dd N | "
+                "u <src> <abil> (or uN A>targets / uN A<targets) | pay <amount> p1|p2:idx[,idx] | ai [p1|p2]  "
+                "(start flags: --ai p1|p2|both, --auto)  See: gamerules.md"
             )

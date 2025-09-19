@@ -35,8 +35,8 @@ def test_just_deployed_lock_blocks_spend_until_next_turn():
 
 
 def _mk_game():
-    n = build_cards(load_deck_json("narc_deck.json"), "NARC")
-    p = build_cards(load_deck_json("pcu_deck.json"), "PCU")
+    n = build_cards(load_deck_json("narc_deck_strict.json"), "NARC")
+    p = build_cards(load_deck_json("pcu_deck_strict.json"), "PCU")
     p1_sl, p2_sl = find_squad_leader(n), find_squad_leader(p)
     p1 = Player("NARC", board=[p1_sl], hand=[c for c in n if c is not p1_sl][:4], deck=[], retired=[])
     p2 = Player("PCU", board=[p2_sl], hand=[c for c in p if c is not p2_sl][:4], deck=[], retired=[])
