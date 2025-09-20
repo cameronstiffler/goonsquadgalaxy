@@ -643,7 +643,7 @@
     {
       "name": "Kriegsgheist",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "PCU",
       "deploy_cost": {
         "wind": 0,
@@ -690,7 +690,7 @@
     {
       "name": "Meatjacker",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 1,
       "faction": "PCU",
       "deploy_cost": {
         "wind": 0,

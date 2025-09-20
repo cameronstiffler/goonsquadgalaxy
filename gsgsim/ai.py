@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+from typing import List
+from typing import Sequence
+
 
 def _get_end_of_turn():
     # Prefer a monkeypatched ai.end_of_turn (used by tests). If missing, return a no-op that just sets a flag.
@@ -18,34 +22,203 @@ def _get_end_of_turn():
     return _noop
 
 
+def _opponent_of(gs, player):
+    try:
+        if player is getattr(gs, "p1", None):
+            return getattr(gs, "p2", None)
+        if player is getattr(gs, "p2", None):
+            return getattr(gs, "p1", None)
+    except Exception:
+        pass
+    return None
+
+
+def _rank_value(card) -> int:
+    rank = getattr(card, "rank", None)
+    text = str(getattr(rank, "name", rank) or "").upper()
+    if text == "SL":
+        return 3
+    if text in ("SG", "T", "TITAN"):
+        return 2
+    return 1
+
+
+def _card_cost(card) -> int:
+    try:
+        return int(getattr(card, "deploy_wind", 0) or 0)
+    except Exception:
+        return 0
+
+
+def _sort_enemy(board: Sequence[Any]) -> List[Any]:
+    def _key(card):
+        wind = 0
+        try:
+            wind = int(getattr(card, "wind", 0) or 0)
+        except Exception:
+            wind = 0
+        return (wind, _rank_value(card), _card_cost(card))
+
+    return sorted((c for c in board if c is not None), key=_key, reverse=True)
+
+
+def _sort_friendly(board: Sequence[Any]) -> List[Any]:
+    def _key(card):
+        try:
+            return int(getattr(card, "wind", 0) or 0)
+        except Exception:
+            return 0
+
+    return sorted((c for c in board if c is not None), key=_key, reverse=True)
+
+
+def _ensure_count(cards: List[Any], count: int) -> List[Any]:
+    if not cards or count <= 0:
+        return []
+    out = list(cards[:count])
+    while len(out) < count:
+        out.append(out[-1])
+    return out
+
+
+def _is_aggressive_effect(effect) -> bool:
+    try:
+        kind = str(effect.get("effect_type", "")).strip().lower()
+    except AttributeError:
+        return False
+    if kind == "destroy":
+        return True
+    if kind in {"disable_abilities", "disable_contribution"}:
+        return True
+    if kind == "alter_wind":
+        amt = effect.get("amount")
+        try:
+            return int(amt) > 0
+        except Exception:
+            return False
+    return False
+
+
+def _preset_targets(gs, me, ability, opponent) -> List[Any]:
+    presets: List[Any] = []
+    effects = getattr(ability, "effects", []) or []
+    friendly_board = list(getattr(me, "board", []))
+    enemy_board = list(getattr(opponent, "board", [])) if opponent else []
+
+    for eff in effects:
+        if not isinstance(eff, dict):
+            continue
+        tokens = eff.get("target") or []
+        aggressive = _is_aggressive_effect(eff)
+        for raw in tokens:
+            tok = str(raw or "").strip().lower()
+            if tok not in {"any", "two_goons", "three_goons"}:
+                continue
+            need = 1
+            if tok == "two_goons":
+                need = 2
+            elif tok == "three_goons":
+                need = 3
+
+            if aggressive and enemy_board:
+                picks = _ensure_count(_sort_enemy(enemy_board), need)
+            else:
+                picks = _ensure_count(_sort_friendly(friendly_board), need)
+            presets.extend(picks)
+    return presets
+
+
+def _ability_aggression_score(ability) -> int:
+    score = 0
+    for eff in getattr(ability, "effects", []) or []:
+        if not isinstance(eff, dict):
+            continue
+        kind = str(eff.get("effect_type", "")).strip().lower()
+        if kind == "destroy":
+            score += 50
+        elif kind == "alter_wind":
+            amt = eff.get("amount")
+            try:
+                delta = int(amt)
+            except Exception:
+                delta = 0
+            if delta > 0:
+                score += 10 * delta
+        elif kind in {"disable_abilities", "disable_contribution"}:
+            score += 8
+    return score
+
+
+def _try_aggressive_ability(gs, me) -> bool:
+    from .abilities import use_ability
+
+    opponent = _opponent_of(gs, me)
+    board = list(getattr(me, "board", []))
+    actions: List[tuple[int, Any, Any, List[Any], int]] = []
+    for bidx, card in enumerate(board):
+        abilities = getattr(card, "abilities", []) or []
+        for aidx, ability in enumerate(abilities):
+            if getattr(ability, "passive", False):
+                continue
+            score = _ability_aggression_score(ability)
+            if score <= 0:
+                continue
+            presets = _preset_targets(gs, me, ability, opponent)
+            actions.append((score, card, aidx, presets, bidx))
+
+    actions.sort(key=lambda item: item[0], reverse=True)
+
+    for score, card, aidx, presets, _ in actions:
+        if getattr(card, "new_this_turn", False):
+            continue
+        if use_ability(gs, card, aidx, presets):
+            return True
+    return False
+
+
+def _deploy_best_available(gs, me) -> None:
+    from .engine import deploy_from_hand
+
+    hand = list(getattr(me, "hand", []))
+    if not hand:
+        return
+
+    indexed = list(enumerate(hand))
+    indexed.sort(key=lambda pair: (_card_cost(pair[1]), pair[0]))
+    for original_idx, _card in indexed:
+        try:
+            if deploy_from_hand(gs, me, original_idx):
+                break
+        except Exception:
+            continue
+
+
 def ai_take_turn(gs) -> None:
     from .abilities import REGISTRY
     from .abilities import use_ability
-    from .payments import distribute_wind
 
     me = getattr(gs, "turn_player", None)
     if me is None:
         setattr(gs, "ended", True)
         return
 
-    # Deploy first affordable (wind-only) card
-    for i, card in enumerate(list(getattr(me, "hand", []))):
-        cost = int(getattr(card, "deploy_wind", 0) or 0)
-        if cost <= 0 or distribute_wind(me, cost):
-            me.board.append(card)
-            me.hand.pop(i)
-            break
+    _deploy_best_available(gs, me)
 
-    # Use first zero-cost ability with effects/handler
-    for bidx, c in enumerate(getattr(me, "board", [])):
-        abilities = getattr(c, "abilities", []) or []
-        for aidx, ab in enumerate(abilities):
-            cost = int(getattr(ab, "cost", {}).get("wind", 0) or 0)
+    if _try_aggressive_ability(gs, me):
+        return _get_end_of_turn()(gs)
+
+    # Fallback to prior behaviour: first zero-cost executable ability
+    for card in getattr(me, "board", []):
+        abilities = getattr(card, "abilities", []) or []
+        if getattr(card, "new_this_turn", False):
+            continue
+        for aidx, ability in enumerate(abilities):
+            cost = int(getattr(ability, "cost", {}).get("wind", 0) or 0)
             if cost == 0:
-                key = (getattr(c, "name", "").lower(), aidx)
-                effects = getattr(ab, "effects", None) or []
+                key = (getattr(card, "name", "").lower(), aidx)
+                effects = getattr(ability, "effects", None) or []
                 if effects or key in REGISTRY:
-                    if use_ability(gs, c, aidx, None):
+                    if use_ability(gs, card, aidx, None):
                         return _get_end_of_turn()(gs)
 
     return _get_end_of_turn()(gs)
