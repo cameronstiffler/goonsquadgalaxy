@@ -560,7 +560,10 @@ def init_game(
     draw(p1, starting_hand_size)
     draw(p2, starting_hand_size)
 
-    gs = GameState(p1=p1, p2=p2, turn_player=p1, phase="main", turn_number=1, rng=rng)
+    first_player = p1 if rng.random() < 0.5 else p2
+
+    gs = GameState(p1=p1, p2=p2, turn_player=first_player, phase="main", turn_number=1, rng=rng)
+    setattr(gs, "starting_player", first_player)
     gs.dead_pool = []
     gs.dead_pool_bio = 0
     gs.dead_pool_mech = 0

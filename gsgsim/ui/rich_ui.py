@@ -278,7 +278,7 @@ class RichUI:
         )
         if cheats_enabled:
             banner += " | [bold]kill[/bold] p1|p2 <idx> (k)"
-        banner += "\nStart flags: --ai p1|p2|both, --auto\nSee: gamerules.md"
+        banner += "\nStart flags: --ai p1|p2|both (auto-turns for AI), --auto\nSee: gamerules.md"
         self.console.print(banner)
 
     def _print_ai_banner(self) -> None:
@@ -464,8 +464,13 @@ class RichUI:
 
             self.render(gs)
 
-            if auto and ((gs.turn_player is gs.p1 and ai_p1) or (gs.turn_player is gs.p2 and ai_p2)):
-                prev = gs.turn_player
+            turn_player = gs.turn_player
+            controller = str(getattr(turn_player, "controller", "") or "").lower()
+            is_ai_turn = controller == "ai" or (turn_player is gs.p1 and ai_p1) or (turn_player is gs.p2 and ai_p2)
+            auto_enabled = auto or controller == "ai"
+
+            if auto_enabled and is_ai_turn:
+                prev = turn_player
                 ai_take_turn(gs)
                 if gs.turn_player is prev:
                     end_of_turn(gs)

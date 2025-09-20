@@ -219,9 +219,31 @@ def main():
     ui = select_ui(ui_name)
 
     ai_flag = (os.environ.get("GSG_AI") or "").strip().lower()
-    ai_p1 = ai_flag in {"p1", "both"}
-    ai_p2 = ai_flag in {"p2", "both"}
+    ai_p1_env = os.environ.get("GSG_AI_P1")
+    ai_p2_env = os.environ.get("GSG_AI_P2")
+
+    ai_p1 = _env_truthy("GSG_AI_P1") if ai_p1_env is not None else ai_flag in {"p1", "both"}
+    ai_p2 = _env_truthy("GSG_AI_P2") if ai_p2_env is not None else ai_flag in {"p2", "both"}
+
+    setattr(gs.p1, "controller", "ai" if ai_p1 else "human")
+    setattr(gs.p2, "controller", "ai" if ai_p2 else "human")
+
     auto = _env_truthy("GSG_AUTO")
+
+    def _env_clean(name: str) -> str | None:
+        val = os.environ.get(name)
+        if val is None:
+            return None
+        cleaned = val.strip()
+        return cleaned or None
+
+    p1_faction = _env_clean("GSG_P1_FACTION")
+    if p1_faction:
+        setattr(gs.p1, "faction", p1_faction.upper())
+
+    p2_faction = _env_clean("GSG_P2_FACTION")
+    if p2_faction:
+        setattr(gs.p2, "faction", p2_faction.upper())
 
     ui.run_loop(gs, ai_p1=ai_p1, ai_p2=ai_p2, auto=auto)
     return gs
