@@ -45,7 +45,7 @@
     {
       "name": "Bruut Enforcer",
       "rank": "SG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 4,
@@ -74,11 +74,11 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "2 to target goon",
+          "text": "Add 1 wind to target Goon.",
           "effects": [
             {
               "effect_type": "alter_wind",
-              "amount": 2,
+              "amount": 1,
               "target": [
                 "any"
               ],
@@ -89,20 +89,20 @@
         {
           "name": "RED WET SPOT",
           "cost": {
-            "wind": 2,
+            "wind": 3,
             "gear": 0,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Destroy target goon",
+          "text": "Target Goon must be destroyed before any other Goons.",
           "effects": [
             {
-              "effect_type": "destroy",
+              "effect_type": "must_be_destroyed_first",
               "target": [
                 "any"
               ],
-              "duration": "instant"
+              "duration": "until_end_of_turn"
             }
           ]
         }
@@ -116,7 +116,7 @@
     {
       "name": "Buzzkill",
       "rank": "SG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 5,
@@ -158,15 +158,14 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Add 2 wind to target goon",
+          "text": "Target Goon does not unwind on its next turn.",
           "effects": [
             {
-              "effect_type": "alter_wind",
-              "amount": 2,
+              "effect_type": "prevent_unwind",
               "target": [
                 "any"
               ],
-              "duration": "instant"
+              "duration": "next_unwind"
             }
           ]
         },
@@ -197,7 +196,7 @@
     {
       "name": "Detainment Probe",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 1,
@@ -251,7 +250,7 @@
     {
       "name": "Marine Marauder",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 3,
@@ -353,7 +352,7 @@
     {
       "name": "Killjoy",
       "rank": "SG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 4,
@@ -395,13 +394,13 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Add 2 wind to target goon",
+          "text": "Remove 1 wind from Killjoy.",
           "effects": [
             {
               "effect_type": "alter_wind",
-              "amount": 2,
+              "amount": -1,
               "target": [
-                "any"
+                "self"
               ],
               "duration": "instant"
             }
@@ -475,7 +474,7 @@
     {
       "name": "Dormex Lurker",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 2,
@@ -497,7 +496,7 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Destroy Lurker and add 2 wind to target Goon.",
+          "text": "Destroy Lurker, add 1 wind to target Goon, and allies gain Resist until end of turn.",
           "effects": [
             {
               "effect_type": "destroy",
@@ -508,11 +507,18 @@
             },
             {
               "effect_type": "alter_wind",
-              "amount": 2,
+              "amount": 1,
               "target": [
                 "any"
               ],
               "duration": "instant"
+            },
+            {
+              "effect_type": "grant_resist",
+              "target": [
+                "ally_all"
+              ],
+              "duration": "until_end_of_turn"
             }
           ]
         },
@@ -731,7 +737,7 @@
     {
       "name": "Nob Lobber",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 4,
@@ -753,7 +759,7 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "1 wind to 2 target Goons.",
+          "text": "Add 1 wind to 2 target Goons.",
           "effects": [
             {
               "effect_type": "alter_wind",
@@ -768,17 +774,17 @@
         {
           "name": "GOON BUSTER",
           "cost": {
-            "wind": 2,
+            "wind": 3,
             "gear": 0,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Add 3 wind to target Goon.",
+          "text": "Add 1 wind to target Goon.",
           "effects": [
             {
               "effect_type": "alter_wind",
-              "amount": 3,
+              "amount": 1,
               "target": [
                 "any"
               ],
@@ -843,7 +849,7 @@
     {
       "name": "Sentry Node",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 4,
@@ -905,7 +911,7 @@
     {
       "name": "Shield Array Node",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 2,
@@ -936,6 +942,35 @@
                 "ally_all"
               ],
               "duration": "persistent"
+            }
+          ]
+        },
+        {
+          "name": "SURGE BARRIER",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Banish 1 mechanical from Dead Pool to give allied Goons Resist until end of turn.",
+          "effects": [
+            {
+              "effect_type": "banish_from_dead_pool",
+              "amount": 1,
+              "value": "mechanical",
+              "target": [
+                "dead_pool"
+              ],
+              "duration": "instant"
+            },
+            {
+              "effect_type": "grant_resist",
+              "target": [
+                "ally_all"
+              ],
+              "duration": "until_end_of_turn"
             }
           ]
         }
@@ -1004,7 +1039,7 @@
     {
       "name": "Target Marker Probe",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "NARC",
       "deploy_cost": {
         "wind": 1,
