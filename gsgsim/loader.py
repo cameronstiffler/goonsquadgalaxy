@@ -124,6 +124,13 @@ def build_cards(deck_obj: Dict[str, Any], faction: Optional[str] = None) -> List
             deploy_meat=dm,
         )
         _apply_card_flags(card, raw)
+        for attr, key in (("image_url_full", "image_url_full"), ("image_url_mini", "image_url_mini")):
+            val = raw.get(key)
+            if val:
+                try:
+                    setattr(card, attr, val)
+                except Exception:
+                    pass
         cards.append(card)
     return cards
 
