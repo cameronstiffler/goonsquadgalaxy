@@ -5,6 +5,17 @@ from typing import List
 from typing import Sequence
 
 
+def _to_int(val: Any) -> int:
+    if isinstance(val, str):
+        text = val.strip().upper()
+        if text == "X":
+            return 0
+    try:
+        return int(val or 0)
+    except Exception:
+        return 0
+
+
 def _get_end_of_turn():
     # Prefer a monkeypatched ai.end_of_turn (used by tests). If missing, return a no-op that just sets a flag.
     try:
@@ -44,19 +55,13 @@ def _rank_value(card) -> int:
 
 
 def _card_cost(card) -> int:
-    try:
-        return int(getattr(card, "deploy_wind", 0) or 0)
-    except Exception:
-        return 0
+    return _to_int(getattr(card, "deploy_wind", 0))
 
 
 def _sort_enemy(board: Sequence[Any]) -> List[Any]:
     def _key(card):
         wind = 0
-        try:
-            wind = int(getattr(card, "wind", 0) or 0)
-        except Exception:
-            wind = 0
+        wind = _to_int(getattr(card, "wind", 0))
         return (wind, _rank_value(card), _card_cost(card))
 
     return sorted((c for c in board if c is not None), key=_key, reverse=True)
@@ -64,10 +69,7 @@ def _sort_enemy(board: Sequence[Any]) -> List[Any]:
 
 def _sort_friendly(board: Sequence[Any]) -> List[Any]:
     def _key(card):
-        try:
-            return int(getattr(card, "wind", 0) or 0)
-        except Exception:
-            return 0
+        return _to_int(getattr(card, "wind", 0))
 
     return sorted((c for c in board if c is not None), key=_key, reverse=True)
 
@@ -92,10 +94,7 @@ def _is_aggressive_effect(effect) -> bool:
         return True
     if kind == "alter_wind":
         amt = effect.get("amount")
-        try:
-            return int(amt) > 0
-        except Exception:
-            return False
+        return _to_int(amt) > 0
     return False
 
 
@@ -138,10 +137,7 @@ def _ability_aggression_score(ability) -> int:
             score += 50
         elif kind == "alter_wind":
             amt = eff.get("amount")
-            try:
-                delta = int(amt)
-            except Exception:
-                delta = 0
+            delta = _to_int(amt)
             if delta > 0:
                 score += 10 * delta
         elif kind in {"disable_abilities", "disable_contribution"}:
@@ -213,7 +209,7 @@ def ai_take_turn(gs) -> None:
         if getattr(card, "new_this_turn", False):
             continue
         for aidx, ability in enumerate(abilities):
-            cost = int(getattr(ability, "cost", {}).get("wind", 0) or 0)
+            cost = _to_int(getattr(ability, "cost", {}).get("wind", 0))
             if cost == 0:
                 key = (getattr(card, "name", "").lower(), aidx)
                 effects = getattr(ability, "effects", None) or []

@@ -14,7 +14,7 @@
       },
       "biological": false,
       "mechanical": true,
-      "resist": true,
+      "resist": false,
       "no_unwind": false,
       "deploy_requirements": [
         {
@@ -89,7 +89,7 @@
       },
       "biological": false,
       "mechanical": true,
-      "resist": true,
+      "resist": false,
       "no_unwind": false,
       "deploy_requirements": [
         {
@@ -164,7 +164,7 @@
       },
       "biological": true,
       "mechanical": false,
-      "resist": true,
+      "resist": false,
       "no_unwind": true,
       "deploy_requirements": [],
       "abilities": [
@@ -206,6 +206,27 @@
                 "self"
               ],
               "duration": "persistent"
+            }
+          ]
+        },
+        {
+          "name": "NETHER REND",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 3 wind to target Goon.",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 3,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
             }
           ]
         }
@@ -786,7 +807,7 @@
       },
       "biological": true,
       "mechanical": false,
-      "resist": true,
+      "resist": false,
       "no_unwind": true,
       "deploy_requirements": [],
       "abilities": [

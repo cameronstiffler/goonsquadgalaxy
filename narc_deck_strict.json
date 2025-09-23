@@ -149,26 +149,27 @@
             }
           ]
         },
+    {
+      "name": "BLAST",
+      "cost": {
+        "wind": 1,
+        "gear": 0,
+        "meat": 0
+      },
+      "passive": false,
+      "must_use": false,
+      "text": "Add 3 wind to target Goon.",
+      "effects": [
         {
-          "name": "BLAST",
-          "cost": {
-            "wind": 1,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": false,
-          "must_use": false,
-          "text": "Target Goon does not unwind on its next turn.",
-          "effects": [
-            {
-              "effect_type": "prevent_unwind",
-              "target": [
-                "any"
-              ],
-              "duration": "next_unwind"
-            }
-          ]
-        },
+          "effect_type": "alter_wind",
+          "amount": 3,
+          "target": [
+            "any"
+          ],
+          "duration": "instant"
+        }
+      ]
+    },
         {
           "name": "DEFENSIVE POSTURE",
           "cost": {
@@ -388,19 +389,19 @@
         {
           "name": "NEUTRALIZE",
           "cost": {
-            "wind": 2,
+            "wind": 1,
             "gear": 0,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Remove 1 wind from Killjoy.",
+          "text": "Add 1 wind to target Goon.",
           "effects": [
             {
               "effect_type": "alter_wind",
-              "amount": -1,
+              "amount": 1,
               "target": [
-                "self"
+                "any"
               ],
               "duration": "instant"
             }
@@ -446,27 +447,35 @@
       "no_unwind": false,
       "deploy_requirements": [],
       "abilities": [
+    {
+      "name": "RESOURCEFUL",
+      "cost": {
+        "wind": 2,
+        "gear": 0,
+        "meat": 0
+      },
+      "passive": false,
+      "must_use": false,
+      "text": "Draw a card and add 2 wind to target Goon.",
+      "effects": [
         {
-          "name": "RESOURCEFUL",
-          "cost": {
-            "wind": 2,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": false,
-          "must_use": false,
-          "text": "Draw a card.",
-          "effects": [
-            {
-              "effect_type": "draw_cards",
-              "amount": 1,
-              "target": [
-                "self"
-              ],
-              "duration": "instant"
-            }
-          ]
+          "effect_type": "draw_cards",
+          "amount": 1,
+          "target": [
+            "self"
+          ],
+          "duration": "instant"
+        },
+        {
+          "effect_type": "alter_wind",
+          "amount": 2,
+          "target": [
+            "any"
+          ],
+          "duration": "instant"
         }
+      ]
+    }
       ],
       "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/lokar.png",
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/lokar.jpg"
@@ -835,6 +844,36 @@
             {
               "effect_type": "alter_wind",
               "amount": -1,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "OVERCLOCKED BURST",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Banish 1 mechanical from Dead Pool to add 1 wind to target Goon.",
+          "effects": [
+            {
+              "effect_type": "banish_from_dead_pool",
+              "amount": 1,
+              "value": "mechanical",
+              "target": [
+                "dead_pool"
+              ],
+              "duration": "instant"
+            },
+            {
+              "effect_type": "alter_wind",
+              "amount": 1,
               "target": [
                 "any"
               ],

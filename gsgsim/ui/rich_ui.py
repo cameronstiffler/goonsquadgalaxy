@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import re
+import webbrowser
 
 from rich.console import Console
 from rich.table import Table
 
 from ..models import Card
 from ..models import GameState
+from ..models import Rank
 
 try:
     from .. import engine_rule_shim
@@ -50,8 +52,12 @@ def select_targets_via_existing_ui(gs, options):
 
 def distribute_wind_via_ui(gs, options):
     # Minimal: distribute 1 to each until total is met
-    pool = options.get("pool", [])
-    total = options.get("total", 1)
+    if isinstance(options, list):
+        pool = options
+        total = len(options)
+    else:
+        pool = options.get("pool", [])
+        total = options.get("total", 1)
     out = {}
     for goon in pool:
         if total <= 0:
@@ -133,6 +139,36 @@ def _resist_icon(card: Card) -> str:
 
 def _no_unwind_icon(card: Card) -> str:
     return "🚫" if _is_true(card, "no_unwind") or _icons_has(card, "no_unwind") else ""
+
+
+def _collect_board_state(player):
+    state = {}
+    for card in getattr(player, "board", []):
+        state[id(card)] = {
+            "card": card,
+            "name": getattr(card, "name", "Goon"),
+            "wind": _to_int(getattr(card, "wind", 0)),
+        }
+    return state
+
+
+def _describe_payment_changes(player, pre_state, pre_retired_ids):
+    msgs = []
+    post_board_ids = {id(c) for c in getattr(player, "board", [])}
+    post_retired_ids = {id(c) for c in getattr(player, "retired", [])}
+    for cid, info in pre_state.items():
+        card = info["card"]
+        if cid not in post_board_ids and cid not in post_retired_ids:
+            continue
+        new_wind = _to_int(getattr(card, "wind", 0))
+        delta = new_wind - info["wind"]
+        if delta <= 0:
+            continue
+        if cid in post_retired_ids and cid not in pre_retired_ids:
+            msgs.append(f"{info['name']} paid {delta} wind and retired (reached {new_wind}).")
+        else:
+            msgs.append(f"{info['name']} paid {delta} wind (now at {new_wind}).")
+    return msgs
 
 
 def _resolve_faction(player, card) -> str:
@@ -268,13 +304,22 @@ def _parse_d_cmd(tok: str):
 class RichUI:
     def __init__(self) -> None:
         self.console = Console()
+        self._last_turn_summary: str | None = None
 
     def _print_command_banner(self, cheats_enabled: bool = False) -> None:
         banner = (
             "[bold cyan]Goon Squad Galaxy Simulator[/bold cyan]\n"
-            "Commands: [bold]help[/bold] | [bold]quit[/bold](q) | [bold]end[/bold](e) | [bold]dN[/bold][contributors...] | [bold]ddN[/bold]|[bold]dd N[/bold]\n"
-            "[bold]u <src> <abil>[/bold] | [bold]pay <amount> p1|p2:idx[,idx][/bold] | [bold]ai[/bold] [p1|p2]\n"
-            "Alt ability syntax: [bold]uN A>targets[/bold] (enemy) or [bold]uN A<targets[/bold] (ally), e.g. u2 0>3 4"
+            "Commands:\n"
+            "  [bold]help[/bold] | [bold]quit[/bold](q) | [bold]end[/bold](e)\n"
+            "  Deploy: [bold]dN[/bold] or [bold]d N[/bold] (e.g. d0) | Double deploy: [bold]ddN[/bold]\n"
+            "           Add contributors after the command, e.g. [bold]d0 0 1 1[/bold]\n"
+            "  View: [bold]deadpool[/bold] (dp)\n"
+            "  Pay wind: [bold]pay <amount> p1|p2:idx[,idx][/bold]\n"
+            "  Use ability: [bold]u <src> <abil>[/bold]\n"
+            "    Target shorthand: [bold]uN A>targets[/bold] (enemy) or [bold]uN A<targets[/bold] (ally); example: [bold]u2 0>3 4[/bold]\n"
+            "  Inspect cards: [bold]vh[n][/bold] hand card, [bold]vb[n][/bold] board card, [bold]vo[n][/bold] opponent board\n"
+            "  AI assist: [bold]ai[/bold] [p1|p2]\n"
+            "Turn and game summaries print automatically after each end of turn."
         )
         if cheats_enabled:
             banner += " | [bold]kill[/bold] p1|p2 <idx> (k)"
@@ -446,6 +491,60 @@ class RichUI:
         else:
             c.print(hand_table("P2", gs.p2))
 
+    def _turn_summary(self, gs: GameState, ended_player) -> None:
+        turn_number = max(0, getattr(gs, "turn_number", 1) - 1)
+        ended_name = getattr(ended_player, "name", "?")
+        p1_board = len(getattr(gs.p1, "board", []))
+        p2_board = len(getattr(gs.p2, "board", []))
+        p1_hand = len(getattr(gs.p1, "hand", []))
+        p2_hand = len(getattr(gs.p2, "hand", []))
+        p1_retired = len(getattr(gs.p1, "retired", []))
+        p2_retired = len(getattr(gs.p2, "retired", []))
+        dead_pool = len(getattr(gs, "dead_pool", []) or [])
+        summary = (
+            f"[bold cyan]Turn {turn_number} ends.[/bold cyan] "
+            f"{ended_name} leaves {p1_board if ended_name == 'P1' else p2_board} goons on the board. "
+            f"P1 now has {p1_board} board / {p1_hand} hand (retired {p1_retired}); "
+            f"P2 has {p2_board} board / {p2_hand} hand (retired {p2_retired}). "
+            f"Dead Pool holds {dead_pool}."
+        )
+        self.console.print(summary)
+        self._last_turn_summary = summary
+
+    def _print_last_turn_summary(self) -> None:
+        if self._last_turn_summary:
+            self.console.print("[bold]Previous Turn[/bold]")
+            self.console.print(self._last_turn_summary)
+
+    def _show_card_url(self, card, label: str) -> None:
+        if card is None:
+            self.console.print(f"[yellow]{label} not found.[/yellow]")
+            return
+        url = getattr(card, "image_url_full", None)
+        if url:
+            self.console.print(f"[bold]{label}:[/bold] {url}")
+            try:
+                webbrowser.open(url)
+            except Exception as exc:
+                self.console.print(f"[yellow]Could not open browser: {exc}[/yellow]")
+        else:
+            self.console.print(f"[yellow]{label} has no image URL.[/yellow]")
+
+    def _game_summary(self, gs: GameState) -> None:
+        loser = getattr(gs, "loser", None)
+        if loser == "P1":
+            winner = "P2"
+        elif loser == "P2":
+            winner = "P1"
+        else:
+            winner = "Unknown"
+        total_turns = max(0, getattr(gs, "turn_number", 1) - 1)
+        p1_retired = len(getattr(gs.p1, "retired", []))
+        p2_retired = len(getattr(gs.p2, "retired", []))
+        dead_pool = len(getattr(gs, "dead_pool", []) or [])
+        self.console.print(("[bold green]Game over![/bold green] " f"Winner: {winner} after {total_turns} turns. " f"P1 retired {p1_retired}; P2 retired {p2_retired}; Dead Pool totals {dead_pool}."))
+        self._last_turn_summary = None
+
     def run_loop(self, gs: GameState, ai_p1: bool = False, ai_p2: bool = False, auto: bool = False):
         import os
 
@@ -460,9 +559,11 @@ class RichUI:
 
         while True:
             if self._check_game_over(gs):
+                self._game_summary(gs)
                 break
 
             self.render(gs)
+            self._print_last_turn_summary()
 
             turn_player = gs.turn_player
             controller = str(getattr(turn_player, "controller", "") or "").lower()
@@ -474,6 +575,7 @@ class RichUI:
                 ai_take_turn(gs)
                 if gs.turn_player is prev:
                     end_of_turn(gs)
+                    self._turn_summary(gs, prev)
                 continue
 
             try:
@@ -545,13 +647,40 @@ class RichUI:
             if line in ("quit", "q", "exit"):
                 break
 
+            m = re.fullmatch(r"vh\[(\d+)\]", line)
+            if m:
+                idx = int(m.group(1))
+                hand = getattr(gs.turn_player, "hand", [])
+                card = hand[idx] if 0 <= idx < len(hand) else None
+                self._show_card_url(card, f"Hand card {idx}")
+                continue
+
+            m = re.fullmatch(r"vb\[(\d+)\]", line)
+            if m:
+                idx = int(m.group(1))
+                board = getattr(gs.turn_player, "board", [])
+                card = board[idx] if 0 <= idx < len(board) else None
+                self._show_card_url(card, f"Board card {idx}")
+                continue
+
+            m = re.fullmatch(r"vo\[(\d+)\]", line)
+            if m:
+                idx = int(m.group(1))
+                opponent = gs.p2 if gs.turn_player is gs.p1 else gs.p1
+                board = getattr(opponent, "board", [])
+                card = board[idx] if 0 <= idx < len(board) else None
+                self._show_card_url(card, f"Opponent card {idx}")
+                continue
+
             if line in ("end", "e"):
                 pending = self._pending_must_use(gs)
                 if pending:
                     card, ability = pending
                     self.console.print(f"[bold red]{getattr(card, 'name', 'Goon')} must use {getattr(ability, 'name', 'ability')} before ending the turn.[/bold red]")
                     continue
+                ended_player = gs.turn_player
                 end_of_turn(gs)
+                self._turn_summary(gs, ended_player)
                 continue
 
             parts = line.split()
@@ -562,6 +691,7 @@ class RichUI:
                     ai_take_turn(gs)
                     if gs.turn_player is prev:
                         end_of_turn(gs)
+                        self._turn_summary(gs, prev)
                 else:
                     side = parts[1].lower()
                     side_player = gs.p1 if side in ("p1", "1") else gs.p2
@@ -571,6 +701,7 @@ class RichUI:
                     ai_take_turn(gs)
                     if gs.turn_player is prev:
                         end_of_turn(gs)
+                        self._turn_summary(gs, prev)
                     gs.turn_player = original
                 continue
 
@@ -587,13 +718,41 @@ class RichUI:
                     except Exception:
                         contributions = []
                 try:
+                    player = gs.turn_player
+                    card = player.hand[idx]
+                    wind_cost = _to_int(getattr(card, "deploy_wind", 0))
+                    pre_state = _collect_board_state(player)
+                    pre_retired = {id(c) for c in getattr(player, "retired", [])}
                     if contributions:
-                        ok = deploy_from_hand(gs, gs.turn_player, idx, contributors=contributions)
+                        ok = deploy_from_hand(gs, player, idx, contributors=contributions)
                     else:
-                        ok = deploy_from_hand(gs, gs.turn_player, idx)
-                    print("deploy ok" if ok else "deploy failed: cannot pay / illegal")
+                        if _auto_deploy_would_retire_sl(gs, player, wind_cost):
+                            self.console.print("[yellow]Auto deploy cancelled: paying wind would retire your Squad Leader. Specify contributors manually.[/yellow]")
+                            ok = False
+                        else:
+                            ok = deploy_from_hand(gs, player, idx)
+                    if ok:
+                        card = player.board[-1] if player.board else None
+                        card_name = getattr(card, "name", "Goon") if card else "Goon"
+                        payment_msgs = _describe_payment_changes(player, pre_state, pre_retired)
+                        if contributions:
+                            contrib_names = []
+                            for ci in contributions:
+                                try:
+                                    contrib_card = player.board[ci]
+                                    contrib_names.append(getattr(contrib_card, "name", f"#{ci}"))
+                                except Exception:
+                                    contrib_names.append(f"#{ci}")
+                            contrib_text = ", ".join(contrib_names)
+                            self.console.print(f"[bold]{player.name}[/bold] deployed {card_name} with wind from {contrib_text}.")
+                        else:
+                            self.console.print(f"[bold]{player.name}[/bold] deployed {card_name} using automatic wind assignment.")
+                        for msg in payment_msgs:
+                            self.console.print(f"    {msg}")
+                    else:
+                        self.console.print("[red]Deploy failed: cannot pay or illegal move.[/red]")
                 except Exception as e:
-                    print(f"deploy error: {e}")
+                    self.console.print(f"[red]Deploy error:[/red] {e}")
                 continue
 
             # New compact ability syntax: u{src} {abil}{arrow}{target...}
@@ -646,3 +805,59 @@ class RichUI:
                 "u <src> <abil> (or uN A>targets / uN A<targets) | pay <amount> p1|p2:idx[,idx] | ai [p1|p2]  "
                 "(start flags: --ai p1|p2|both, --auto)  See: gamerules.md"
             )
+
+
+def _to_int(val):
+    try:
+        if isinstance(val, str):
+            return int(val.strip())
+        return int(val or 0)
+    except Exception:
+        return 0
+
+
+def _is_squad_leader(card) -> bool:
+    rank = getattr(card, "rank", None)
+    if isinstance(rank, Rank):
+        return rank.name.upper() == "SL"
+    if isinstance(rank, str):
+        return rank.strip().upper() == "SL"
+    return False
+
+
+def _auto_deploy_would_retire_sl(gs, player, wind_cost: int) -> bool:
+    if wind_cost <= 0:
+        return False
+    from ..rules import cannot_spend_wind
+    from ..rules import has_status
+
+    other_capacity = 0
+    sl_capacity = 0
+    sl_wind = None
+
+    for card in getattr(player, "board", []):
+        if has_status(card, "disable_contribution"):
+            continue
+        if cannot_spend_wind(gs, card):
+            continue
+        wind = _to_int(getattr(card, "wind", 0))
+        capacity = max(0, 4 - wind)
+        if capacity <= 0:
+            continue
+        if _is_squad_leader(card):
+            sl_capacity = capacity
+            sl_wind = wind
+        else:
+            other_capacity += capacity
+
+    if sl_wind is None:
+        return False
+
+    remaining = wind_cost - other_capacity
+    if remaining <= 0:
+        return False
+    if remaining > sl_capacity:
+        return True
+    if sl_wind + remaining >= 4:
+        return True
+    return False
