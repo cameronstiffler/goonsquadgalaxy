@@ -145,6 +145,11 @@ def _ability_aggression_score(ability) -> int:
     return score
 
 
+def _ability_wind_cost(ability) -> int:
+    cost = getattr(ability, "cost", {}) or {}
+    return _to_int(cost.get("wind", 0))
+
+
 def _try_aggressive_ability(gs, me) -> bool:
     from .abilities import use_ability
 
@@ -166,6 +171,11 @@ def _try_aggressive_ability(gs, me) -> bool:
 
     for score, card, aidx, presets, _ in actions:
         if getattr(card, "new_this_turn", False):
+            continue
+        wind_cost = _ability_wind_cost(getattr(card, "abilities", [])[aidx])
+        current_wind = _to_int(getattr(card, "wind", 0))
+        if wind_cost > 0 and current_wind + wind_cost >= 4:
+            # avoid self-retiring
             continue
         if use_ability(gs, card, aidx, presets):
             return True

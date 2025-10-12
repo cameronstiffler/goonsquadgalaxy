@@ -72,6 +72,11 @@ def build_cards(deck_obj: Dict[str, Any], faction: Optional[str] = None) -> List
                     dm += n
 
         abilities: List[Ability] = []
+        deploy_requirements_raw = raw.get("deploy_requirements", []) or []
+        if isinstance(deploy_requirements_raw, list):
+            deploy_requirements = [dict(req) if isinstance(req, dict) else req for req in deploy_requirements_raw]
+        else:
+            deploy_requirements = []
         for a in raw.get("abilities", []):
             cost: Dict[str, int] = {}
             passive = False
@@ -119,6 +124,7 @@ def build_cards(deck_obj: Dict[str, Any], faction: Optional[str] = None) -> List
             faction=faction,
             traits=traits,
             abilities=abilities,
+            deploy_requirements=deploy_requirements,
             deploy_wind=dw,
             deploy_gear=dg,
             deploy_meat=dm,

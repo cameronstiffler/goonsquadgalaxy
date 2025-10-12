@@ -177,7 +177,7 @@
           },
           "passive": false,
           "must_use": true,
-          "text": "Add 1 wind to target Goon. Must use this ability every turn if able.",
+          "text": "Add 1 wind to target Goon. Must always use this ability on owners turn if able",
           "effects": [
             {
               "effect_type": "alter_wind",
@@ -206,27 +206,6 @@
                 "self"
               ],
               "duration": "persistent"
-            }
-          ]
-        },
-        {
-          "name": "NETHER REND",
-          "cost": {
-            "wind": 1,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": false,
-          "must_use": false,
-          "text": "Add 3 wind to target Goon.",
-          "effects": [
-            {
-              "effect_type": "alter_wind",
-              "amount": 3,
-              "target": [
-                "any"
-              ],
-              "duration": "instant"
             }
           ]
         }
@@ -281,13 +260,13 @@
         {
           "name": "BEHEAD",
           "cost": {
-            "wind": 4,
+            "wind": 3,
             "gear": 0,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Destroy target Goon. (High wind cost)",
+          "text": "Destroy target Goon.",
           "effects": [
             {
               "effect_type": "destroy",
@@ -624,14 +603,15 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Target Goon does not unwind on its next turn.",
+          "text": "Add 2 wind to target Goon",
           "effects": [
             {
-              "effect_type": "prevent_unwind",
+              "effect_type": "alter_wind",
+              "amount": 2,
               "target": [
                 "any"
               ],
-              "duration": "next_unwind"
+              "duration": "instant"
             }
           ]
         },
@@ -644,21 +624,14 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Target Goon cannot use abilities or contribute wind on its next turn.",
+          "text": "Destroy target Goon.",
           "effects": [
             {
-              "effect_type": "disable_abilities",
+              "effect_type": "destroy",
               "target": [
                 "any"
               ],
-              "duration": "next_turn"
-            },
-            {
-              "effect_type": "disable_contribution",
-              "target": [
-                "any"
-              ],
-              "duration": "next_turn"
+              "duration": "instant"
             }
           ]
         }
@@ -1172,6 +1145,77 @@
                 "revived_by_self"
               ],
               "duration": "persistent"
+            }
+          ]
+        }
+      ],
+      "notes": [],
+      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/technomancer.png",
+      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/technomancer.jpg"
+    },
+    {
+      "name": "Shadow Shaman",
+      "rank": "BG",
+      "duplicates": 4,
+      "faction": "PCU",
+      "deploy_cost": {
+        "wind": 3,
+        "gear": 0,
+        "meat": 0
+      },
+      "biological": true,
+      "mechanical": true,
+      "resist": false,
+      "no_unwind": false,
+      "deploy_requirements": [],
+      "abilities": [
+        {
+          "name": "DARK MATTER DELUGE",
+          "cost": {
+            "wind": "X",
+            "gear": 0,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 1 wind to X Goons",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 1,
+              "target": [
+                "x_goons"
+              ],
+              "duration": "instant"
+            },
+            {
+              "effect_type": "alter_wind",
+              "amount": 1,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "SHADOW LANCE",
+          "cost": {
+            "wind": 2,
+            "gear": 1,
+            "meat": 0
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Add 2 wind to target Goon.",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": 2,
+              "target": [
+                "any"
+              ],
+              "duration": "instant"
             }
           ]
         }

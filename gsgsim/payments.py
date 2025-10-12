@@ -16,6 +16,43 @@ from .rules import destroy_if_needed
 Chooser = Callable[[List[Tuple[int, Card, int]], int], Optional[List[Tuple[int, int]]]]
 
 
+def _deploy_bonus_available(card: Card) -> int:
+    status = getattr(card, "status", {}) or {}
+    total = 0
+    for token in status.get("deploy_contribution_bonus", []):
+        try:
+            total += int(token.get("value", 0) or 0)
+        except Exception:
+            continue
+    return max(0, total)
+
+
+def _spend_deploy_bonus(card: Card, amount: int) -> None:
+    if amount <= 0:
+        return
+    status = getattr(card, "status", {}) or {}
+    tokens = status.get("deploy_contribution_bonus", [])
+    idx = 0
+    remaining = int(amount)
+    while remaining > 0 and idx < len(tokens):
+        token = tokens[idx]
+        try:
+            value = int(token.get("value", 0) or 0)
+        except Exception:
+            value = 0
+        if value <= 0:
+            tokens.pop(idx)
+            continue
+        if value <= remaining:
+            remaining -= value
+            tokens.pop(idx)
+            continue
+        token["value"] = value - remaining
+        remaining = 0
+    if not tokens and "deploy_contribution_bonus" in status:
+        status.pop("deploy_contribution_bonus", None)
+
+
 def _eligible_with_caps(player: Player) -> List[Tuple[int, Card, int]]:
     """
     Return list of (board_index, card, cap) that can contribute wind this turn.
@@ -171,8 +208,31 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, con
             if not isinstance(idx, int):
                 return False
             plan_map[idx] = plan_map.get(idx, 0) + 1
-        if sum(plan_map.values()) != total_cost:
+
+        actual_total = sum(plan_map.values())
+        if actual_total > total_cost:
             return False
+
+        bonus_usage: List[Tuple[Card, int]] = []
+        remaining = total_cost - actual_total
+        if remaining > 0:
+            for idx, amt in plan_map.items():
+                if idx < 0 or idx >= len(board):
+                    return False
+                if amt <= 0:
+                    continue
+                card = board[idx]
+                bonus = _deploy_bonus_available(card)
+                if bonus <= 0:
+                    continue
+                use = min(bonus, remaining)
+                if use > 0:
+                    bonus_usage.append((card, use))
+                    remaining -= use
+                if remaining <= 0:
+                    break
+            if remaining > 0:
+                return False
 
         for idx, amt in plan_map.items():
             if idx < 0 or idx >= len(board):
@@ -194,42 +254,67 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, con
                 else:
                     card.wind = int(getattr(card, "wind", 0) or 0) + 1
 
+        for card, used in bonus_usage:
+            _spend_deploy_bonus(card, used)
+
         return True
 
     # Order: non-SL first, then SL
-    order = [c for c in board if not is_sl(c) and capacity(c) > 0] + [c for c in board if is_sl(c) and capacity(c) > 0]
+    non_sl: List[Tuple[Card, int, int]] = []
+    sls: List[Tuple[Card, int, int]] = []
+    for c in board:
+        cap = capacity(c)
+        if cap <= 0:
+            continue
+        bonus = _deploy_bonus_available(c)
+        entry = (c, cap, bonus)
+        (sls if is_sl(c) else non_sl).append(entry)
+    order: List[Tuple[Card, int, int]] = non_sl + sls
 
-    # Transactional: check total capacity first
-    total_cap = sum(capacity(c) for c in order)
+    # Transactional: check total capacity first (including bonuses)
+    total_cap = sum(cap for _, cap, _ in order)
+    total_bonus = sum(max(0, bonus) for _, _, bonus in order)
     # Guard: in plain auto mode (no gs), refuse lethal-only payment when **all** payers are SLs
     # This matches tests expecting distribute_wind(p, 1) to return False when only an SL at 3 can pay.
     if auto and gs is None:
         # Build the current payer set we considered in 'order'
-        def _is_sl(c):
-            rank = getattr(c, "rank", None)
+        def _is_sl(card):
+            rank = getattr(card, "rank", None)
             name = getattr(rank, "name", "") if hasattr(rank, "name") else rank
             return str(name).upper() == "SL"
 
-        if order and all(_is_sl(c) for c in order):
-            # If any SL would hit >=4 when paying 'need' (and there are no non-SL alternatives), refuse
-            # Conservative but correct for the unit test: single SL at 3, need 1 -> refuse
-            min_margin = min(4 - int(getattr(c, "wind", 0) or 0) for c in order)
-            if min_margin <= total_cost:
+        if order and all(_is_sl(card) for card, _, _ in order):
+            actual_needed = max(0, total_cost - total_bonus)
+            safe_capacity = 0
+            for card, _, _ in order:
+                current = int(getattr(card, "wind", 0) or 0)
+                safe_capacity += max(0, 3 - current)
+            if actual_needed > safe_capacity:
                 return False
 
-    if total_cap < total_cost:
+    if total_cap + total_bonus < total_cost:
         return False
 
     # Plan payment
     need = total_cost
-    plan = []
-    for c in order:
-        take = min(capacity(c), need)
-        if take > 0:
-            plan.append((c, take))
-            need -= take
-            if need == 0:
-                break
+    plan: List[Tuple[Card, int]] = []
+    bonus_usage: List[Tuple[Card, int]] = []
+    for card, cap, bonus in order:
+        if need <= 0:
+            break
+        take = min(cap, need)
+        if take <= 0:
+            continue
+        extra = 0
+        if bonus > 0 and take < need:
+            extra = min(bonus, need - take)
+        plan.append((card, take))
+        if extra > 0:
+            bonus_usage.append((card, extra))
+        need -= take + extra
+
+    if need > 0:
+        return False
 
     # Apply payment
     for card, take in plan:
@@ -238,4 +323,6 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, con
             destroy_if_needed(gs, card)
         else:
             card.wind = int(getattr(card, "wind", 0)) + int(take)
+    for card, used in bonus_usage:
+        _spend_deploy_bonus(card, used)
     return True

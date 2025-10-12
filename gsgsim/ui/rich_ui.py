@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-import webbrowser
+import subprocess
+from collections import Counter
 
 from rich.console import Console
 from rich.table import Table
@@ -171,6 +172,104 @@ def _describe_payment_changes(player, pre_state, pre_retired_ids):
     return msgs
 
 
+def _snapshot_state(gs):
+    def capture(player):
+        return {
+            "hand": [getattr(c, "name", "?") for c in getattr(player, "hand", [])],
+            "board": [getattr(c, "name", "?") for c in getattr(player, "board", [])],
+            "retired": [getattr(c, "name", "?") for c in getattr(player, "retired", [])],
+        }
+
+    return {
+        "p1": capture(gs.p1),
+        "p2": capture(gs.p2),
+        "dead": [getattr(c, "name", "?") for c in getattr(gs, "dead_pool", []) or []],
+    }
+
+
+def _list_diff(before, after):
+    be = Counter(before)
+    af = Counter(after)
+    added = list((af - be).elements())
+    removed = list((be - af).elements())
+    return added, removed
+
+
+def _consume_matches(source: list[str], target: list[str]) -> list[str]:
+    matches = []
+    for item in list(source):
+        if item in target:
+            matches.append(item)
+            source.remove(item)
+            target.remove(item)
+    return matches
+
+
+def _describe_events_for_side(side_key: str, pre_state, post_state, perspective: str) -> list[str]:
+    label = side_key.upper()
+    if perspective == "opp":
+        label = f"Opponent ({label})"
+
+    hand_added, hand_removed = _list_diff(pre_state[side_key]["hand"], post_state[side_key]["hand"])
+    board_added, board_removed = _list_diff(pre_state[side_key]["board"], post_state[side_key]["board"])
+    retired_added, retired_removed = _list_diff(pre_state[side_key]["retired"], post_state[side_key]["retired"])
+
+    events: list[str] = []
+    hand_removed_copy = hand_removed[:]
+    board_added_copy = board_added[:]
+    board_removed_copy = board_removed[:]
+    retired_added_copy = retired_added[:]
+    retired_removed_copy = retired_removed[:]
+
+    deployed = _consume_matches(hand_removed_copy, board_added_copy)
+    for card in deployed:
+        events.append(f"{label} deployed {card}.")
+
+    revived = _consume_matches(retired_removed_copy, board_added_copy)
+    for card in revived:
+        events.append(f"{label} revived {card} from retirement.")
+
+    retired = _consume_matches(board_removed_copy, retired_added_copy)
+    for card in retired:
+        events.append(f"{label}'s {card} was retired.")
+
+    returned = _consume_matches(board_removed_copy, hand_added[:])
+    for card in returned:
+        events.append(f"{label} returned {card} to hand.")
+
+    for card in hand_added:
+        events.append(f"{label} drew {card}.")
+    for card in hand_removed_copy:
+        events.append(f"{label} played {card} from hand.")
+    for card in board_added_copy:
+        events.append(f"{label} brought {card} onto the board.")
+    for card in board_removed_copy:
+        events.append(f"{label} lost {card} from the board.")
+    for card in retired_added_copy:
+        events.append(f"{label}'s {card} moved to the retired pile.")
+    for card in retired_removed_copy:
+        events.append(f"{label} recovered {card} from retirement.")
+
+    return events
+
+
+def _summarize_turn_events(pre_state, post_state, acting_key: str) -> list[str]:
+    events: list[str] = []
+    events.extend(_describe_events_for_side(acting_key, pre_state, post_state, "self"))
+    opponent_key = "p1" if acting_key == "p2" else "p2"
+    events.extend(_describe_events_for_side(opponent_key, pre_state, post_state, "opp"))
+
+    dead_added, dead_removed = _list_diff(pre_state["dead"], post_state["dead"])
+    for card in dead_added:
+        events.append(f"{card} was sent to the Dead Pool.")
+    for card in dead_removed:
+        events.append(f"{card} left the Dead Pool.")
+
+    if not events:
+        events.append("No notable card changes.")
+    return events
+
+
 def _resolve_faction(player, card) -> str:
     for obj, attr in ((player, "faction"), (player, "name"), (card, "faction")):
         try:
@@ -217,7 +316,6 @@ def _name_with_icons(card: Card, faction_str: str) -> str:
         _resist_icon(card),
         _no_unwind_icon(card),
         _bio_mech_icon(card),
-        _faction_icon(faction_str),
         _locked_icon(card),
     ]
     return f"{name}{''.join(p for p in pieces if p)}"
@@ -305,6 +403,9 @@ class RichUI:
     def __init__(self) -> None:
         self.console = Console()
         self._last_turn_summary: str | None = None
+        self._pre_turn_state: dict | None = None
+        self._pre_turn_player = None
+        self._status_message: str | None = None
 
     def _print_command_banner(self, cheats_enabled: bool = False) -> None:
         banner = (
@@ -433,13 +534,16 @@ class RichUI:
 
         def board_table(title: str, player) -> Table:
             faction = str(getattr(player, "faction", "")).upper()
+            border_style = None
             if faction == "PCU":
-                title = f"[green]{faction}[/green] {title}"
+                title = f"🌀 [green]{faction}[/green] {title}"
+                border_style = "green"
             elif faction == "NARC":
-                title = f"[orange1]{faction}[/orange1] {title}"
+                title = f"🚨 [orange1]{faction}[/orange1] {title}"
+                border_style = "orange1"
             else:
                 title = f"{faction or ''} {title}".strip()
-            t = Table(title=title)
+            t = Table(title=title, border_style=border_style)
             t.add_column("#", justify="right")
             t.add_column("Name")
             t.add_column("Wind", justify="right")
@@ -468,13 +572,16 @@ class RichUI:
 
         def hand_table(title: str, player) -> Table:
             faction = str(getattr(player, "faction", "")).upper()
+            border_style = None
             if faction == "PCU":
-                hand_title = f"[green]{faction}[/green] {title} hand"
+                hand_title = f"🌀 [green]{faction}[/green] {title} hand"
+                border_style = "green"
             elif faction == "NARC":
-                hand_title = f"[orange1]{faction}[/orange1] {title} hand"
+                hand_title = f"🚨 [orange1]{faction}[/orange1] {title} hand"
+                border_style = "orange1"
             else:
                 hand_title = f"{faction} {title} hand".strip()
-            t = Table(title=f"{hand_title} ({len(player.hand)})")
+            t = Table(title=f"{hand_title} ({len(player.hand)})", border_style=border_style)
             t.add_column("#", justify="right")
             t.add_column("Name")
             t.add_column("Cost")
@@ -491,16 +598,16 @@ class RichUI:
         else:
             c.print(hand_table("P2", gs.p2))
 
-    def _turn_summary(self, gs: GameState, ended_player) -> None:
+    def _turn_summary(self, gs: GameState, ended_player, pre_state, post_state) -> None:
         turn_number = max(0, getattr(gs, "turn_number", 1) - 1)
         ended_name = getattr(ended_player, "name", "?")
-        p1_board = len(getattr(gs.p1, "board", []))
-        p2_board = len(getattr(gs.p2, "board", []))
-        p1_hand = len(getattr(gs.p1, "hand", []))
-        p2_hand = len(getattr(gs.p2, "hand", []))
-        p1_retired = len(getattr(gs.p1, "retired", []))
-        p2_retired = len(getattr(gs.p2, "retired", []))
-        dead_pool = len(getattr(gs, "dead_pool", []) or [])
+        p1_board = len(post_state["p1"]["board"])
+        p2_board = len(post_state["p2"]["board"])
+        p1_hand = len(post_state["p1"]["hand"])
+        p2_hand = len(post_state["p2"]["hand"])
+        p1_retired = len(post_state["p1"]["retired"])
+        p2_retired = len(post_state["p2"]["retired"])
+        dead_pool = len(post_state["dead"])
         summary = (
             f"[bold cyan]Turn {turn_number} ends.[/bold cyan] "
             f"{ended_name} leaves {p1_board if ended_name == 'P1' else p2_board} goons on the board. "
@@ -508,27 +615,37 @@ class RichUI:
             f"P2 has {p2_board} board / {p2_hand} hand (retired {p2_retired}). "
             f"Dead Pool holds {dead_pool}."
         )
-        self.console.print(summary)
-        self._last_turn_summary = summary
+        acting_key = "p1" if ended_player is gs.p1 else "p2"
+        events = _summarize_turn_events(pre_state, post_state, acting_key)
+        lines = [summary] + [f"  {evt}" for evt in events]
+        text = "\n".join(lines)
+        self.console.print(text)
+        self._last_turn_summary = text
 
     def _print_last_turn_summary(self) -> None:
         if self._last_turn_summary:
             self.console.print("[bold]Previous Turn[/bold]")
             self.console.print(self._last_turn_summary)
 
+    def _print_status_message(self) -> None:
+        if self._status_message:
+            self.console.print(self._status_message)
+
     def _show_card_url(self, card, label: str) -> None:
         if card is None:
-            self.console.print(f"[yellow]{label} not found.[/yellow]")
+            self._status_message = f"[yellow]{label} not found.[/yellow]"
             return
         url = getattr(card, "image_url_full", None)
         if url:
-            self.console.print(f"[bold]{label}:[/bold] {url}")
+            clean_url = str(url).strip()
+            message_lines = [f"[bold]{label}:[/bold] {clean_url}"]
             try:
-                webbrowser.open(url)
+                subprocess.run(["/usr/bin/open", clean_url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
             except Exception as exc:
-                self.console.print(f"[yellow]Could not open browser: {exc}[/yellow]")
+                message_lines.append(f"[yellow]Could not open browser automatically ({exc}). Open the URL above manually.[/yellow]")
+            self._status_message = "\n".join(message_lines)
         else:
-            self.console.print(f"[yellow]{label} has no image URL.[/yellow]")
+            self._status_message = f"[yellow]{label} has no image URL.[/yellow]"
 
     def _game_summary(self, gs: GameState) -> None:
         loser = getattr(gs, "loser", None)
@@ -542,8 +659,11 @@ class RichUI:
         p1_retired = len(getattr(gs.p1, "retired", []))
         p2_retired = len(getattr(gs.p2, "retired", []))
         dead_pool = len(getattr(gs, "dead_pool", []) or [])
-        self.console.print(("[bold green]Game over![/bold green] " f"Winner: {winner} after {total_turns} turns. " f"P1 retired {p1_retired}; P2 retired {p2_retired}; Dead Pool totals {dead_pool}."))
+        summary = "[bold green]Game over![/bold green] " f"Winner: {winner} after {total_turns} turns. " f"P1 retired {p1_retired}; P2 retired {p2_retired}; Dead Pool totals {dead_pool}."
+        self.console.print(summary)
         self._last_turn_summary = None
+        self._pre_turn_state = None
+        self._pre_turn_player = None
 
     def run_loop(self, gs: GameState, ai_p1: bool = False, ai_p2: bool = False, auto: bool = False):
         import os
@@ -558,12 +678,17 @@ class RichUI:
         self._print_ai_banner()
 
         while True:
+            if self._pre_turn_player is not gs.turn_player or self._pre_turn_state is None:
+                self._pre_turn_state = _snapshot_state(gs)
+                self._pre_turn_player = gs.turn_player
+
             if self._check_game_over(gs):
                 self._game_summary(gs)
                 break
 
             self.render(gs)
             self._print_last_turn_summary()
+            self._print_status_message()
 
             turn_player = gs.turn_player
             controller = str(getattr(turn_player, "controller", "") or "").lower()
@@ -572,10 +697,14 @@ class RichUI:
 
             if auto_enabled and is_ai_turn:
                 prev = turn_player
+                pre_state = self._pre_turn_state or _snapshot_state(gs)
                 ai_take_turn(gs)
+                post_state = _snapshot_state(gs)
                 if gs.turn_player is prev:
                     end_of_turn(gs)
-                    self._turn_summary(gs, prev)
+                    self._turn_summary(gs, prev, pre_state, post_state)
+                    self._pre_turn_state = _snapshot_state(gs)
+                    self._pre_turn_player = gs.turn_player
                 continue
 
             try:
@@ -679,8 +808,12 @@ class RichUI:
                     self.console.print(f"[bold red]{getattr(card, 'name', 'Goon')} must use {getattr(ability, 'name', 'ability')} before ending the turn.[/bold red]")
                     continue
                 ended_player = gs.turn_player
+                pre_state = self._pre_turn_state or _snapshot_state(gs)
+                post_state = _snapshot_state(gs)
                 end_of_turn(gs)
-                self._turn_summary(gs, ended_player)
+                self._turn_summary(gs, ended_player, pre_state, post_state)
+                self._pre_turn_state = _snapshot_state(gs)
+                self._pre_turn_player = gs.turn_player
                 continue
 
             parts = line.split()
@@ -688,21 +821,32 @@ class RichUI:
             if parts[0] == "ai":
                 if len(parts) == 1:
                     prev = gs.turn_player
+                    pre_state = self._pre_turn_state or _snapshot_state(gs)
                     ai_take_turn(gs)
+                    post_state = _snapshot_state(gs)
                     if gs.turn_player is prev:
                         end_of_turn(gs)
-                        self._turn_summary(gs, prev)
+                        self._turn_summary(gs, prev, pre_state, post_state)
+                        self._pre_turn_state = _snapshot_state(gs)
+                        self._pre_turn_player = gs.turn_player
                 else:
                     side = parts[1].lower()
                     side_player = gs.p1 if side in ("p1", "1") else gs.p2
                     original = gs.turn_player
                     gs.turn_player = side_player
                     prev = gs.turn_player
+                    pre_state = _snapshot_state(gs)
                     ai_take_turn(gs)
+                    post_state = _snapshot_state(gs)
                     if gs.turn_player is prev:
                         end_of_turn(gs)
-                        self._turn_summary(gs, prev)
+                        self._turn_summary(gs, prev, pre_state, post_state)
+                        self._pre_turn_state = _snapshot_state(gs)
+                        self._pre_turn_player = gs.turn_player
                     gs.turn_player = original
+                    if self._pre_turn_player is not gs.turn_player:
+                        self._pre_turn_state = _snapshot_state(gs)
+                        self._pre_turn_player = gs.turn_player
                 continue
 
             # replacing if (parts[0].startswith("d") and parts[0][1:].isdigit()) or (parts[0] == "d" and len(parts) >= 2 and parts[1].isdigit()):

@@ -48,6 +48,7 @@ class Card:
 
     # defaults after
     abilities: List[Ability] = field(default_factory=list)
+    deploy_requirements: List[Dict[str, Any]] = field(default_factory=list)
     traits: Set[str] = field(default_factory=set)
     statuses: Dict[str, Status] = field(default_factory=dict)
 

@@ -1,0 +1,740 @@
+Goon Squad Galaxy Simulator
+Commands:
+  help | quit(q) | end(e)
+  Deploy: dN or d N (e.g. d0) | Double deploy: ddN
+           Add contributors after the command, e.g. d0 0 1 1
+  View: deadpool (dp)
+  Pay wind: pay <amount> p1|p2:idx[,idx]
+  Use ability: u <src> <abil>
+    Target shorthand: uN A>targets (enemy) or uN A<targets (ally); example: u2 
+0>3 4
+  Inspect cards: vh hand card, vb board card, vo opponent board
+  AI assist: ai 
+Turn and game summaries print automatically after each end of turn.
+Start flags: --ai p1|p2|both (auto-turns for AI), --auto
+See: gamerules.md
+Tip: Type ai to have the current player act once.
+Use ai p1 or ai p2 to target a side.
+Deploy with dN (you can list contributors: e.g. d0 0 1 1); end turn with e or 
+end.
+Turn 1 | Player: P1
+                            NARC Board P2                            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                      ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card │
+└───┴───────────────────────┴──────┴────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name         ┃ Wind ┃ Abilities                                          ┃
+┡━━━╇━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀 │    0 │ 0 DEFILE NATURE Remove 1 wind from any target      │
+│   │              │      │ Goon.                                              │
+└───┴──────────────┴──────┴────────────────────────────────────────────────────┘
+Dead Pool 🥩:0 ⚙️ :0
+          PCU P1 hand (6)           
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                 ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀         │ 3⟲    │
+│ 1 │ Meat Vegetable🥩🌀   │ -     │
+│ 2 │ Kriegsgheist✋🚫🌀   │ 3⛭ 3⚈ │
+│ 3 │ Primordial Oozer🥩🌀 │ 1⟲    │
+│ 4 │ Mutt⚙️ 🌀             │ 4⟲    │
+│ 5 │ Psychodelic Toad🥩🌀 │ 2⟲    │
+└───┴──────────────────────┴───────┘
+Turn 1 ends. P1 leaves 2 goons on the board. P1 now has 2 board / 5 hand 
+(retired 0); P2 has 1 board / 6 hand (retired 0). Dead Pool holds 0.
+  P1 deployed Meat Vegetable.
+Turn 2 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name               ┃ Wind ┃ Abilities                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀       │    0 │ 0 DEFILE NATURE Remove 1 wind from any       │
+│   │                    │      │ target Goon.                                 │
+│ 1 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+└───┴────────────────────┴──────┴──────────────────────────────────────────────┘
+                            NARC Board P2                            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                      ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card │
+└───┴───────────────────────┴──────┴────────────────────────────────┘
+Dead Pool 🥩:0 ⚙️ :0
+          NARC P2 hand (7)          
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                  ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Dormex Lurker🚫⚙️ 🚨   │ 2⟲   │
+│ 1 │ Sentry Node⚙️ 🚨       │ 4⟲   │
+│ 2 │ Shield Array Node⚙️ 🚨 │ 2⟲   │
+│ 3 │ Killjoy🔶✋⚙️ 🚨       │ 4⟲   │
+│ 4 │ Hover Shield⚙️ 🚨      │ 2⟲   │
+│ 5 │ Buzzkill🔶✋⚙️ 🚨      │ 5⟲   │
+│ 6 │ Task Mistres⚙️ 🚨      │ 2⟲   │
+└───┴───────────────────────┴──────┘
+Previous Turn
+Turn 1 ends. P1 leaves 2 goons on the board. P1 now has 2 board / 5 hand 
+(retired 0); P2 has 1 board / 6 hand (retired 0). Dead Pool holds 0.
+  P1 deployed Meat Vegetable.
+Turn 2 ends. P2 leaves 2 goons on the board. P1 now has 2 board / 5 hand 
+(retired 0); P2 has 2 board / 6 hand (retired 0). Dead Pool holds 0.
+  P2 deployed Dormex Lurker.
+Turn 3 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    2 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Dormex Lurker🚫⚙️ 🚨   │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name               ┃ Wind ┃ Abilities                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀       │    0 │ 0 DEFILE NATURE Remove 1 wind from any       │
+│   │                    │      │ target Goon.                                 │
+│ 1 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+└───┴────────────────────┴──────┴──────────────────────────────────────────────┘
+Dead Pool 🥩:0 ⚙️ :0
+          PCU P1 hand (6)           
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                 ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀         │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀   │ 3⛭ 3⚈ │
+│ 2 │ Primordial Oozer🥩🌀 │ 1⟲    │
+│ 3 │ Mutt⚙️ 🌀             │ 4⟲    │
+│ 4 │ Psychodelic Toad🥩🌀 │ 2⟲    │
+│ 5 │ Blood Howler⚙️ 🌀     │ 2⟲    │
+└───┴──────────────────────┴───────┘
+Previous Turn
+Turn 2 ends. P2 leaves 2 goons on the board. P1 now has 2 board / 5 hand 
+(retired 0); P2 has 2 board / 6 hand (retired 0). Dead Pool holds 0.
+  P2 deployed Dormex Lurker.
+could not pay wind
+Turn 3 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 0); P2 has 2 board / 6 hand (retired 0). Dead Pool holds 0.
+  P1 deployed Primordial Oozer.
+Turn 4 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Meat Vegetable🥩🌀   │    1 │ -                                          │
+│ 2 │ Primordial Oozer🥩🌀 │    0 │ 0 DISCHARGE [1⟲] Add 1 wind to target Goon │
+│   │                      │      │ 1 GOOP Unfriendly Goon who targets Oozer   │
+│   │                      │      │ with an ability does not unwind during its │
+│   │                      │      │ next unwind phase.                         │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    1 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Dormex Lurker🚫⚙️ 🚨   │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+Dead Pool 🥩:0 ⚙️ :0
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Shield Array Node⚙️ 🚨    │ 2⟲   │
+│ 2 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 3 │ Hover Shield⚙️ 🚨         │ 2⟲   │
+│ 4 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 5 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+│ 6 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 3 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 0); P2 has 2 board / 6 hand (retired 0). Dead Pool holds 0.
+  P1 deployed Primordial Oozer.
+Turn 4 ends. P2 leaves 3 goons on the board. P1 now has 2 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 0). Dead Pool holds 1.
+  P2 deployed Shield Array Node.
+  Opponent (P1)'s Meat Vegetable was retired.
+  Meat Vegetable was sent to the Dead Pool.
+Turn 5 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    1 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Dormex Lurker🚫⚙️ 🚨   │    2 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+│ 2 │ Shield Array Node⚙️ 🚨 │    0 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Primordial Oozer🥩🌀 │    0 │ 0 DISCHARGE [1⟲] Add 1 wind to target Goon │
+│   │                      │      │ 1 GOOP Unfriendly Goon who targets Oozer   │
+│   │                      │      │ with an ability does not unwind during its │
+│   │                      │      │ next unwind phase.                         │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+Dead Pool 🥩:1 ⚙️ :0
+          PCU P1 hand (6)           
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                 ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀         │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀   │ 3⛭ 3⚈ │
+│ 2 │ Mutt⚙️ 🌀             │ 4⟲    │
+│ 3 │ Psychodelic Toad🥩🌀 │ 2⟲    │
+│ 4 │ Blood Howler⚙️ 🌀     │ 2⟲    │
+│ 5 │ Krax🔶✋🥩🌀         │ 6⟲    │
+└───┴──────────────────────┴───────┘
+Previous Turn
+Turn 4 ends. P2 leaves 3 goons on the board. P1 now has 2 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 0). Dead Pool holds 1.
+  P2 deployed Shield Array Node.
+  Opponent (P1)'s Meat Vegetable was retired.
+  Meat Vegetable was sent to the Dead Pool.
+could not pay wind
+Turn 5 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 0). Dead Pool holds 1.
+  P1 deployed Psychodelic Toad.
+Turn 6 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Primordial Oozer🥩🌀 │    3 │ 0 DISCHARGE [1⟲] Add 1 wind to target Goon │
+│   │                      │      │ 1 GOOP Unfriendly Goon who targets Oozer   │
+│   │                      │      │ with an ability does not unwind during its │
+│   │                      │      │ next unwind phase.                         │
+│ 2 │ Psychodelic Toad🥩🌀 │    0 │ 0 DOSE [2⟲] Target Goon may not use        │
+│   │                      │      │ abilities or contribute wind on its        │
+│   │                      │      │ Player’s next turn. Target may still       │
+│   │                      │      │ unwind.                                    │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Dormex Lurker🚫⚙️ 🚨   │    3 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+│ 2 │ Shield Array Node⚙️ 🚨 │    0 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+Dead Pool 🥩:1 ⚙️ :0
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 2 │ Hover Shield⚙️ 🚨         │ 2⟲   │
+│ 3 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 4 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+│ 5 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+│ 6 │ Dormex Lurker🚫⚙️ 🚨      │ 2⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 5 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 0). Dead Pool holds 1.
+  P1 deployed Psychodelic Toad.
+Turn 6 ends. P2 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 1). Dead Pool holds 3.
+  P2 deployed Hover Shield.
+  P2's Dormex Lurker was retired.
+  Dormex Lurker was sent to the Dead Pool.
+  Dormex Lurker was sent to the Dead Pool.
+Turn 7 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Shield Array Node⚙️ 🚨 │    1 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+│ 2 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Primordial Oozer🥩🌀 │    3 │ 0 DISCHARGE [1⟲] Add 1 wind to target Goon │
+│   │                      │      │ 1 GOOP Unfriendly Goon who targets Oozer   │
+│   │                      │      │ with an ability does not unwind during its │
+│   │                      │      │ next unwind phase.                         │
+│ 2 │ Psychodelic Toad🥩🌀 │    0 │ 0 DOSE [2⟲] Target Goon may not use        │
+│   │                      │      │ abilities or contribute wind on its        │
+│   │                      │      │ Player’s next turn. Target may still       │
+│   │                      │      │ unwind.                                    │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+Dead Pool 🥩:1 ⚙️ :2
+         PCU P1 hand (6)          
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name               ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀       │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀 │ 3⛭ 3⚈ │
+│ 2 │ Mutt⚙️ 🌀           │ 4⟲    │
+│ 3 │ Blood Howler⚙️ 🌀   │ 2⟲    │
+│ 4 │ Krax🔶✋🥩🌀       │ 6⟲    │
+│ 5 │ Käsekobold🥩🌀     │ 2⟲    │
+└───┴────────────────────┴───────┘
+Previous Turn
+Turn 6 ends. P2 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 1); P2 has 3 board / 6 hand (retired 1). Dead Pool holds 3.
+  P2 deployed Hover Shield.
+  P2's Dormex Lurker was retired.
+  Dormex Lurker was sent to the Dead Pool.
+  Dormex Lurker was sent to the Dead Pool.
+could not pay wind
+Turn 7 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 2); P2 has 3 board / 6 hand (retired 1). Dead Pool holds 5.
+  P1 deployed Blood Howler.
+  P1's Primordial Oozer was retired.
+  Primordial Oozer was sent to the Dead Pool.
+  Primordial Oozer was sent to the Dead Pool.
+Turn 8 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Psychodelic Toad🥩🌀 │    3 │ 0 DOSE [2⟲] Target Goon may not use        │
+│   │                      │      │ abilities or contribute wind on its        │
+│   │                      │      │ Player’s next turn. Target may still       │
+│   │                      │      │ unwind.                                    │
+│ 2 │ Blood Howler⚙️ 🌀     │    0 │ 0 BALLISTIC BARRAGE Distribute X wind      │
+│   │                      │      │ among target Goons.                        │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Shield Array Node⚙️ 🚨 │    0 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+│ 2 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+Dead Pool 🥩:3 ⚙️ :2
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 2 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 3 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+│ 4 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+│ 5 │ Dormex Lurker🚫⚙️ 🚨      │ 2⟲   │
+│ 6 │ Marine Marauder🥩⚙️ 🚨    │ 3⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 7 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 2); P2 has 3 board / 6 hand (retired 1). Dead Pool holds 5.
+  P1 deployed Blood Howler.
+  P1's Primordial Oozer was retired.
+  Primordial Oozer was sent to the Dead Pool.
+  Primordial Oozer was sent to the Dead Pool.
+Turn 8 ends. P2 leaves 4 goons on the board. P1 now has 3 board / 5 hand 
+(retired 2); P2 has 4 board / 6 hand (retired 1). Dead Pool holds 5.
+  P2 deployed Task Mistres.
+Turn 9 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Shield Array Node⚙️ 🚨 │    2 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+│ 2 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+│ 3 │ Task Mistres⚙️ 🚨      │    0 │ 0 BIDE TIME Mistrex gains Resist until    │
+│   │                       │      │ beginning of Player's next turn.          │
+│   │                       │      │ 1 TAZING CRACK [1⟲] Target Goon does not  │
+│   │                       │      │ unwind during its next unwind.            │
+│   │                       │      │ 2 DOMINATE [2⟲] Use target Goon ability   │
+│   │                       │      │ on a target of Player's choice. Target    │
+│   │                       │      │ Goon pays wind as it would on its turn.   │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                 ┃ Wind ┃ Abilities                                  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀         │    0 │ 0 DEFILE NATURE Remove 1 wind from any     │
+│   │                      │      │ target Goon.                               │
+│ 1 │ Psychodelic Toad🥩🌀 │    2 │ 0 DOSE [2⟲] Target Goon may not use        │
+│   │                      │      │ abilities or contribute wind on its        │
+│   │                      │      │ Player’s next turn. Target may still       │
+│   │                      │      │ unwind.                                    │
+│ 2 │ Blood Howler⚙️ 🌀     │    0 │ 0 BALLISTIC BARRAGE Distribute X wind      │
+│   │                      │      │ among target Goons.                        │
+└───┴──────────────────────┴──────┴────────────────────────────────────────────┘
+Dead Pool 🥩:3 ⚙️ :2
+           PCU P1 hand (6)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                   ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀           │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀     │ 3⛭ 3⚈ │
+│ 2 │ Mutt⚙️ 🌀               │ 4⟲    │
+│ 3 │ Krax🔶✋🥩🌀           │ 6⟲    │
+│ 4 │ Käsekobold🥩🌀         │ 2⟲    │
+│ 5 │ Restless Natives🚫🥩🌀 │ 2⟲    │
+└───┴────────────────────────┴───────┘
+Previous Turn
+Turn 8 ends. P2 leaves 4 goons on the board. P1 now has 3 board / 5 hand 
+(retired 2); P2 has 4 board / 6 hand (retired 1). Dead Pool holds 5.
+  P2 deployed Task Mistres.
+could not pay wind
+Turn 9 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 3); P2 has 4 board / 6 hand (retired 1). Dead Pool holds 7.
+  P1 deployed Käsekobold.
+  P1's Psychodelic Toad was retired.
+  Psychodelic Toad was sent to the Dead Pool.
+  Psychodelic Toad was sent to the Dead Pool.
+Turn 10 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name             ┃ Wind ┃ Abilities                                      ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀     │    0 │ 0 DEFILE NATURE Remove 1 wind from any target  │
+│   │                  │      │ Goon.                                          │
+│ 1 │ Blood Howler⚙️ 🌀 │    0 │ 0 BALLISTIC BARRAGE Distribute X wind among    │
+│   │                  │      │ target Goons.                                  │
+│ 2 │ Käsekobold🥩🌀   │    1 │ 0 ADD NAUSEAM [1⟲] Add 1 wind to target Goon   │
+│   │                  │      │ 1 REVOLT Add 1 wind to any Goon who targets    │
+│   │                  │      │ Käsekobold with ability                        │
+└───┴──────────────────┴──────┴────────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Shield Array Node⚙️ 🚨 │    1 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+│ 2 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+│ 3 │ Task Mistres⚙️ 🚨      │    0 │ 0 BIDE TIME Mistrex gains Resist until    │
+│   │                       │      │ beginning of Player's next turn.          │
+│   │                       │      │ 1 TAZING CRACK [1⟲] Target Goon does not  │
+│   │                       │      │ unwind during its next unwind.            │
+│   │                       │      │ 2 DOMINATE [2⟲] Use target Goon ability   │
+│   │                       │      │ on a target of Player's choice. Target    │
+│   │                       │      │ Goon pays wind as it would on its turn.   │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+Dead Pool 🥩:5 ⚙️ :2
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 2 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 3 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+│ 4 │ Dormex Lurker🚫⚙️ 🚨      │ 2⟲   │
+│ 5 │ Marine Marauder🥩⚙️ 🚨    │ 3⟲   │
+│ 6 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 9 ends. P1 leaves 3 goons on the board. P1 now has 3 board / 5 hand 
+(retired 3); P2 has 4 board / 6 hand (retired 1). Dead Pool holds 7.
+  P1 deployed Käsekobold.
+  P1's Psychodelic Toad was retired.
+  Psychodelic Toad was sent to the Dead Pool.
+  Psychodelic Toad was sent to the Dead Pool.
+Turn 10 ends. P2 leaves 5 goons on the board. P1 now has 3 board / 5 hand 
+(retired 3); P2 has 5 board / 6 hand (retired 1). Dead Pool holds 7.
+  P2 deployed Dormex Lurker.
+Turn 11 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Shield Array Node⚙️ 🚨 │    3 │ 0 FORTIFICATION NETWORK While 2+ Shield   │
+│   │                       │      │ Array Nodes are in play, Player's Goons   │
+│   │                       │      │ may not be the target of negative         │
+│   │                       │      │ effects.                                  │
+│   │                       │      │ 1 SURGE BARRIER [1⟲] Banish 1 mechanical  │
+│   │                       │      │ from Dead Pool to give allied Goons       │
+│   │                       │      │ Resist until end of turn.                 │
+│ 2 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+│ 3 │ Task Mistres⚙️ 🚨      │    0 │ 0 BIDE TIME Mistrex gains Resist until    │
+│   │                       │      │ beginning of Player's next turn.          │
+│   │                       │      │ 1 TAZING CRACK [1⟲] Target Goon does not  │
+│   │                       │      │ unwind during its next unwind.            │
+│   │                       │      │ 2 DOMINATE [2⟲] Use target Goon ability   │
+│   │                       │      │ on a target of Player's choice. Target    │
+│   │                       │      │ Goon pays wind as it would on its turn.   │
+│ 4 │ Dormex Lurker🚫⚙️ 🚨   │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name             ┃ Wind ┃ Abilities                                      ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀     │    0 │ 0 DEFILE NATURE Remove 1 wind from any target  │
+│   │                  │      │ Goon.                                          │
+│ 1 │ Blood Howler⚙️ 🌀 │    0 │ 0 BALLISTIC BARRAGE Distribute X wind among    │
+│   │                  │      │ target Goons.                                  │
+│ 2 │ Käsekobold🥩🌀   │    0 │ 0 ADD NAUSEAM [1⟲] Add 1 wind to target Goon   │
+│   │                  │      │ 1 REVOLT Add 1 wind to any Goon who targets    │
+│   │                  │      │ Käsekobold with ability                        │
+└───┴──────────────────┴──────┴────────────────────────────────────────────────┘
+Dead Pool 🥩:5 ⚙️ :2
+           PCU P1 hand (6)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                   ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀           │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀     │ 3⛭ 3⚈ │
+│ 2 │ Mutt⚙️ 🌀               │ 4⟲    │
+│ 3 │ Krax🔶✋🥩🌀           │ 6⟲    │
+│ 4 │ Restless Natives🚫🥩🌀 │ 2⟲    │
+│ 5 │ Meat Vegetable🥩🌀     │ -     │
+└───┴────────────────────────┴───────┘
+Previous Turn
+Turn 10 ends. P2 leaves 5 goons on the board. P1 now has 3 board / 5 hand 
+(retired 3); P2 has 5 board / 6 hand (retired 1). Dead Pool holds 7.
+  P2 deployed Dormex Lurker.
+could not pay wind
+Turn 11 ends. P1 leaves 4 goons on the board. P1 now has 4 board / 5 hand 
+(retired 3); P2 has 4 board / 6 hand (retired 2). Dead Pool holds 8.
+  P1 deployed Meat Vegetable.
+  Opponent (P2)'s Shield Array Node was retired.
+  Shield Array Node was sent to the Dead Pool.
+Turn 12 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name               ┃ Wind ┃ Abilities                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀       │    0 │ 0 DEFILE NATURE Remove 1 wind from any       │
+│   │                    │      │ target Goon.                                 │
+│ 1 │ Blood Howler⚙️ 🌀   │    0 │ 0 BALLISTIC BARRAGE Distribute X wind among  │
+│   │                    │      │ target Goons.                                │
+│ 2 │ Käsekobold🥩🌀     │    1 │ 0 ADD NAUSEAM [1⟲] Add 1 wind to target Goon │
+│   │                    │      │ 1 REVOLT Add 1 wind to any Goon who targets  │
+│   │                    │      │ Käsekobold with ability                      │
+│ 3 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+└───┴────────────────────┴──────┴──────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                  ┃ Wind ┃ Abilities                                 ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨 │    0 │ 0 RESOURCEFUL [2⟲] Draw a card            │
+│ 1 │ Hover Shield⚙️ 🚨      │    0 │ 0 COVER [1⟲] Target Goon may not be       │
+│   │                       │      │ targeted by enemy Goon abilities until    │
+│   │                       │      │ the beginning of player's next turn.      │
+│ 2 │ Task Mistres⚙️ 🚨      │    0 │ 0 BIDE TIME Mistrex gains Resist until    │
+│   │                       │      │ beginning of Player's next turn.          │
+│   │                       │      │ 1 TAZING CRACK [1⟲] Target Goon does not  │
+│   │                       │      │ unwind during its next unwind.            │
+│   │                       │      │ 2 DOMINATE [2⟲] Use target Goon ability   │
+│   │                       │      │ on a target of Player's choice. Target    │
+│   │                       │      │ Goon pays wind as it would on its turn.   │
+│ 3 │ Dormex Lurker🚫⚙️ 🚨   │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3     │
+│   │                       │      │ wind to target Goon                       │
+│   │                       │      │ 1 REACTIVE MUNITIONS Destroy Goon who     │
+│   │                       │      │ destroys Lurker.                          │
+└───┴───────────────────────┴──────┴───────────────────────────────────────────┘
+Dead Pool 🥩:5 ⚙️ :3
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 2 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 3 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+│ 4 │ Marine Marauder🥩⚙️ 🚨    │ 3⟲   │
+│ 5 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+│ 6 │ Compliance Auditon⚙️ 🚨   │ 1⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 11 ends. P1 leaves 4 goons on the board. P1 now has 4 board / 5 hand 
+(retired 3); P2 has 4 board / 6 hand (retired 2). Dead Pool holds 8.
+  P1 deployed Meat Vegetable.
+  Opponent (P2)'s Shield Array Node was retired.
+  Shield Array Node was sent to the Dead Pool.
+Turn 12 ends. P2 leaves 5 goons on the board. P1 now has 3 board / 5 hand 
+(retired 4); P2 has 5 board / 6 hand (retired 2). Dead Pool holds 9.
+  P2 deployed Compliance Auditon.
+  Opponent (P1)'s Käsekobold was retired.
+  Käsekobold was sent to the Dead Pool.
+Turn 13 | Player: P1
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                   ┃ Wind ┃ Abilities                                ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨  │    0 │ 0 RESOURCEFUL [2⟲] Draw a card           │
+│ 1 │ Hover Shield⚙️ 🚨       │    1 │ 0 COVER [1⟲] Target Goon may not be      │
+│   │                        │      │ targeted by enemy Goon abilities until   │
+│   │                        │      │ the beginning of player's next turn.     │
+│ 2 │ Task Mistres⚙️ 🚨       │    0 │ 0 BIDE TIME Mistrex gains Resist until   │
+│   │                        │      │ beginning of Player's next turn.         │
+│   │                        │      │ 1 TAZING CRACK [1⟲] Target Goon does not │
+│   │                        │      │ unwind during its next unwind.           │
+│   │                        │      │ 2 DOMINATE [2⟲] Use target Goon ability  │
+│   │                        │      │ on a target of Player's choice. Target   │
+│   │                        │      │ Goon pays wind as it would on its turn.  │
+│ 3 │ Dormex Lurker🚫⚙️ 🚨    │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3    │
+│   │                        │      │ wind to target Goon                      │
+│   │                        │      │ 1 REACTIVE MUNITIONS Destroy Goon who    │
+│   │                        │      │ destroys Lurker.                         │
+│ 4 │ Compliance Auditon⚙️ 🚨 │    0 │ 0 LITIGIOUS GRIDLOCK [1⟲] Target goon    │
+│   │                        │      │ does not unwind in its next unwind       │
+│   │                        │      │ phase.                                   │
+└───┴────────────────────────┴──────┴──────────────────────────────────────────┘
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name               ┃ Wind ┃ Abilities                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀       │    0 │ 0 DEFILE NATURE Remove 1 wind from any       │
+│   │                    │      │ target Goon.                                 │
+│ 1 │ Blood Howler⚙️ 🌀   │    0 │ 0 BALLISTIC BARRAGE Distribute X wind among  │
+│   │                    │      │ target Goons.                                │
+│ 2 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+└───┴────────────────────┴──────┴──────────────────────────────────────────────┘
+Dead Pool 🥩:6 ⚙️ :3
+           PCU P1 hand (6)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┓
+┃ # ┃ Name                   ┃ Cost  ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━┩
+│ 0 │ Voidling🥩🌀           │ 3⟲    │
+│ 1 │ Kriegsgheist✋🚫🌀     │ 3⛭ 3⚈ │
+│ 2 │ Mutt⚙️ 🌀               │ 4⟲    │
+│ 3 │ Krax🔶✋🥩🌀           │ 6⟲    │
+│ 4 │ Restless Natives🚫🥩🌀 │ 2⟲    │
+│ 5 │ Meat Vegetable🥩🌀     │ -     │
+└───┴────────────────────────┴───────┘
+Previous Turn
+Turn 12 ends. P2 leaves 5 goons on the board. P1 now has 3 board / 5 hand 
+(retired 4); P2 has 5 board / 6 hand (retired 2). Dead Pool holds 9.
+  P2 deployed Compliance Auditon.
+  Opponent (P1)'s Käsekobold was retired.
+  Käsekobold was sent to the Dead Pool.
+could not pay wind
+Turn 13 ends. P1 leaves 4 goons on the board. P1 now has 4 board / 5 hand 
+(retired 4); P2 has 5 board / 6 hand (retired 2). Dead Pool holds 9.
+  P1 deployed Meat Vegetable.
+Turn 14 | Player: P2
+                                  PCU Board P1                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name               ┃ Wind ┃ Abilities                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Grim⭐✋🥩🌀       │    0 │ 0 DEFILE NATURE Remove 1 wind from any       │
+│   │                    │      │ target Goon.                                 │
+│ 1 │ Blood Howler⚙️ 🌀   │    0 │ 0 BALLISTIC BARRAGE Distribute X wind among  │
+│   │                    │      │ target Goons.                                │
+│ 2 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+│ 3 │ Meat Vegetable🥩🌀 │    0 │ -                                            │
+└───┴────────────────────┴──────┴──────────────────────────────────────────────┘
+                                 NARC Board P2                                  
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                   ┃ Wind ┃ Abilities                                ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 0 │ Lokar Simmons⭐✋🥩🚨  │    0 │ 0 RESOURCEFUL [2⟲] Draw a card           │
+│ 1 │ Hover Shield⚙️ 🚨       │    0 │ 0 COVER [1⟲] Target Goon may not be      │
+│   │                        │      │ targeted by enemy Goon abilities until   │
+│   │                        │      │ the beginning of player's next turn.     │
+│ 2 │ Task Mistres⚙️ 🚨       │    0 │ 0 BIDE TIME Mistrex gains Resist until   │
+│   │                        │      │ beginning of Player's next turn.         │
+│   │                        │      │ 1 TAZING CRACK [1⟲] Target Goon does not │
+│   │                        │      │ unwind during its next unwind.           │
+│   │                        │      │ 2 DOMINATE [2⟲] Use target Goon ability  │
+│   │                        │      │ on a target of Player's choice. Target   │
+│   │                        │      │ Goon pays wind as it would on its turn.  │
+│ 3 │ Dormex Lurker🚫⚙️ 🚨    │    0 │ 0 SELF DESTRUCT Destroy Lurker, add 3    │
+│   │                        │      │ wind to target Goon                      │
+│   │                        │      │ 1 REACTIVE MUNITIONS Destroy Goon who    │
+│   │                        │      │ destroys Lurker.                         │
+│ 4 │ Compliance Auditon⚙️ 🚨 │    0 │ 0 LITIGIOUS GRIDLOCK [1⟲] Target goon    │
+│   │                        │      │ does not unwind in its next unwind       │
+│   │                        │      │ phase.                                   │
+└───┴────────────────────────┴──────┴──────────────────────────────────────────┘
+Dead Pool 🥩:6 ⚙️ :3
+           NARC P2 hand (7)            
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┓
+┃ # ┃ Name                     ┃ Cost ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━┩
+│ 0 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+│ 1 │ Killjoy🔶✋⚙️ 🚨          │ 4⟲   │
+│ 2 │ Buzzkill🔶✋⚙️ 🚨         │ 5⟲   │
+│ 3 │ Bruut Enforcer🔶✋🚫⚙️ 🚨 │ 4⟲   │
+│ 4 │ Marine Marauder🥩⚙️ 🚨    │ 3⟲   │
+│ 5 │ Task Mistres⚙️ 🚨         │ 2⟲   │
+│ 6 │ Sentry Node⚙️ 🚨          │ 4⟲   │
+└───┴──────────────────────────┴──────┘
+Previous Turn
+Turn 13 ends. P1 leaves 4 goons on the board. P1 now has 4 board / 5 hand 
+(retired 4); P2 has 5 board / 6 hand (retired 2). Dead Pool holds 9.
+  P1 deployed Meat Vegetable.
+Turn 14 ends. P2 leaves 6 goons on the board. P1 now has 3 board / 5 hand 
+(retired 5); P2 has 6 board / 6 hand (retired 2). Dead Pool holds 10.
+  P2 deployed Task Mistres.
+  Opponent (P1)'s Grim was retired.
+  Grim was sent to the Dead Pool.
+Game over! Winner: P2
+Game over! Winner: P2 after 14 turns. P1 retired 5; P2 retired 2; Dead Pool 
+totals 10.

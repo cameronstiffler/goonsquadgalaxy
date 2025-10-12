@@ -456,21 +456,13 @@
       },
       "passive": false,
       "must_use": false,
-      "text": "Draw a card and add 2 wind to target Goon.",
+      "text": "Draw a card",
       "effects": [
         {
           "effect_type": "draw_cards",
           "amount": 1,
           "target": [
             "self"
-          ],
-          "duration": "instant"
-        },
-        {
-          "effect_type": "alter_wind",
-          "amount": 2,
-          "target": [
-            "any"
           ],
           "duration": "instant"
         }
@@ -505,7 +497,7 @@
           },
           "passive": false,
           "must_use": false,
-          "text": "Destroy Lurker, add 1 wind to target Goon, and allies gain Resist until end of turn.",
+          "text": "Destroy Lurker, add 3 wind to target Goon",
           "effects": [
             {
               "effect_type": "destroy",
@@ -516,7 +508,7 @@
             },
             {
               "effect_type": "alter_wind",
-              "amount": 1,
+              "amount": 4,
               "target": [
                 "any"
               ],
@@ -556,12 +548,12 @@
       "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/narc/mini/lurker.jpg"
     },
     {
-      "name": "MediFlux-1NDS",
+      "name": "MediFux-1NDS",
       "rank": "BG",
       "duplicates": 4,
       "faction": "NARC",
       "deploy_cost": {
-        "wind": 2,
+        "wind": 1,
         "gear": 0,
         "meat": 0
       },
@@ -575,18 +567,39 @@
           "name": "DORSAL CAVITY RINSE",
           "cost": {
             "wind": 1,
-            "gear": 0,
+            "gear": 1,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Remove 1 wind from target Goon.",
+          "text": "Remove 1 wind from target biological Goon.",
           "effects": [
             {
               "effect_type": "alter_wind",
               "amount": -1,
               "target": [
-                "any"
+                "any_biological"
+              ],
+              "duration": "instant"
+            }
+          ]
+        },
+        {
+          "name": "BIO LUBE",
+          "cost": {
+            "wind": 1,
+            "gear": 0,
+            "meat": 1
+          },
+          "passive": false,
+          "must_use": false,
+          "text": "Remove 1 wind from target mechanical Goon.",
+          "effects": [
+            {
+              "effect_type": "alter_wind",
+              "amount": -1,
+              "target": [
+                "any_mechanical"
               ],
               "duration": "instant"
             }
@@ -763,18 +776,18 @@
           "name": "SCATTER LOAD",
           "cost": {
             "wind": 1,
-            "gear": 0,
+            "gear": 1,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Add 1 wind to 2 target Goons.",
+          "text": "Add 1 wind to 3 target Goons.",
           "effects": [
             {
               "effect_type": "alter_wind",
               "amount": 1,
               "target": [
-                "two_goons"
+                "three_goons"
               ],
               "duration": "instant"
             }
@@ -852,30 +865,30 @@
           ]
         },
         {
-          "name": "OVERCLOCKED BURST",
+          "name": "BOOST",
           "cost": {
-            "wind": 1,
+            "wind": 0,
             "gear": 0,
-            "meat": 0
+            "meat": 1
           },
           "passive": false,
           "must_use": false,
-          "text": "Banish 1 mechanical from Dead Pool to add 1 wind to target Goon.",
+          "text": "Add 1 additional wind when contributing to deploy this turn.",
           "effects": [
             {
               "effect_type": "banish_from_dead_pool",
               "amount": 1,
-              "value": "mechanical",
+              "value": "biological",
               "target": [
                 "dead_pool"
               ],
               "duration": "instant"
             },
             {
-              "effect_type": "alter_wind",
+              "effect_type": "alter_deploy_wind",
               "amount": 1,
               "target": [
-                "any"
+                "self"
               ],
               "duration": "instant"
             }

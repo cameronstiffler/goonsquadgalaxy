@@ -22,6 +22,7 @@ from .models import Player
 from .payments import Chooser as PaymentChooser
 from .payments import distribute_wind
 from .rules import apply_wind
+from .rules import can_target_card
 from .rules import cannot_spend_wind
 from .rules import destroy_if_needed
 
@@ -81,6 +82,113 @@ def _has_squad_goon_duplicate(player: Player, card) -> bool:
         if other_name == name and _is_squad_goon(existing):
             return True
     return False
+
+
+def _opponent_for(gs: GameState, player: Player) -> Optional[Player]:
+    if getattr(gs, "p1", None) is player:
+        return getattr(gs, "p2", None)
+    if getattr(gs, "p2", None) is player:
+        return getattr(gs, "p1", None)
+    if hasattr(gs, "p1") and hasattr(gs, "p2"):
+        return gs.p2 if player is getattr(gs, "p1", None) else getattr(gs, "p1", None)
+    return None
+
+
+def _req_field(req: Any, key: str, default: Any = None) -> Any:
+    if isinstance(req, dict):
+        return req.get(key, default)
+    return getattr(req, key, default)
+
+
+def _req_count(req: Any, default: int = 1) -> int:
+    value = _req_field(req, "count", default)
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _board_for_side(gs: GameState, player: Player, side: Optional[str]) -> List[Card]:
+    side_token = (side or "self").strip().lower()
+    if side_token == "opponent":
+        opp = _opponent_for(gs, player)
+        return list(getattr(opp, "board", [])) if opp else []
+    return list(getattr(player, "board", []))
+
+
+def _rank_token(card: Any) -> str:
+    rank = getattr(card, "rank", None)
+    if isinstance(rank, str):
+        return rank.strip().upper()
+    if hasattr(rank, "name"):
+        return str(rank.name).upper()
+    return str(rank).strip().upper()
+
+
+def _check_deploy_requirement(gs: GameState, player: Player, card: Card, req: Any) -> tuple[bool, Optional[str]]:
+    req_type = str(_req_field(req, "type", "")).strip().lower()
+    side = _req_field(req, "side", "self")
+    board = _board_for_side(gs, player, side)
+
+    if req_type == "requires_card_in_play":
+        name = _req_field(req, "card_name")
+        if not name:
+            return True, None
+        count_needed = _req_count(req, 1)
+        matched = sum(1 for c in board if str(getattr(c, "name", "")).strip().lower() == str(name).strip().lower())
+        if matched < count_needed:
+            side_text = "your" if (side or "self").strip().lower() != "opponent" else "the opponent's"
+            needed_text = f"{count_needed}x " if count_needed > 1 else ""
+            return False, f"cannot deploy: requires {needed_text}{name} on {side_text} board"
+        return True, None
+
+    if req_type == "requires_rank_in_play":
+        rank_value = str(_req_field(req, "value", "")).strip().upper()
+        if not rank_value:
+            return True, None
+        count_needed = _req_count(req, 1)
+        matched = sum(1 for c in board if _rank_token(c) == rank_value)
+        if matched < count_needed:
+            side_text = "your" if (side or "self").strip().lower() != "opponent" else "the opponent's"
+            return False, f"cannot deploy: requires {count_needed} rank {rank_value} goon on {side_text} board"
+        return True, None
+
+    if req_type == "requires_faction":
+        faction_value = str(_req_field(req, "value", "")).strip().upper()
+        if not faction_value:
+            return True, None
+        count_needed = _req_count(req, 1)
+        matched = sum(1 for c in board if str(getattr(c, "faction", "")).strip().upper() == faction_value)
+        if matched < count_needed:
+            side_text = "your" if (side or "self").strip().lower() != "opponent" else "the opponent's"
+            return False, f"cannot deploy: requires {count_needed} {faction_value} goon on {side_text} board"
+        return True, None
+
+    if req_type == "requires_unique_in_play":
+        name = str(getattr(card, "name", "")).strip().lower()
+        if not name:
+            return True, None
+        # Unique requirements consider all boards.
+        in_play: List[Any] = []
+        if hasattr(gs, "p1"):
+            in_play.extend(getattr(gs.p1, "board", []))
+        if hasattr(gs, "p2"):
+            in_play.extend(getattr(gs.p2, "board", []))
+        if any(str(getattr(c, "name", "")).strip().lower() == name for c in in_play):
+            return False, f"cannot deploy: {getattr(card, 'name', 'This goon')} is unique and already in play"
+        return True, None
+
+    # Text or unknown requirement types are treated as informational only.
+    return True, None
+
+
+def _check_deploy_requirements(gs: GameState, player: Player, card: Card) -> tuple[bool, Optional[str]]:
+    requirements = getattr(card, "deploy_requirements", None) or []
+    for req in requirements:
+        ok, message = _check_deploy_requirement(gs, player, card, req)
+        if not ok:
+            return False, message
+    return True, None
 
 
 def draw(player: Player, n: int = 1) -> List[Card]:
@@ -173,6 +281,11 @@ def deploy_from_hand(
 
     if _has_squad_goon_duplicate(player, card):
         print("cannot deploy: squad goon of this type already in play")
+        return False
+
+    ok, reason = _check_deploy_requirements(gs, player, card)
+    if not ok:
+        print(reason or "cannot deploy: deployment requirements not met")
         return False
 
     # Pay wind
@@ -1001,6 +1114,18 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
                     new_resolved.append(t)
             resolved = new_resolved
 
+        # Enforce targeting restrictions (e.g., SL protection)
+        filtered: List[Any] = []
+        for target in resolved:
+            if isinstance(target, tuple) or target is None:
+                filtered.append(target)
+                continue
+            hostile = bool(owner and _me_owner_of(gs, target) is not owner)
+            if not can_target_card(gs, source, target, hostile=hostile):
+                continue
+            filtered.append(target)
+        resolved = filtered
+
         # Execute effect
         if et == "alter_wind":
             _me_apply_alter_wind(gs, source, owner, resolved, amount, chooser)
@@ -1073,6 +1198,14 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
             _me_register_duration(resolved, "no_unwind_flag", True, duration, gs.turn_number)
         elif et == "redirect_damage":
             _me_register_duration(resolved, "redirect_damage", source, duration, gs.turn_number)
+        elif et == "alter_deploy_wind":
+            if amount:
+                try:
+                    bonus = int(amount)
+                except Exception:
+                    bonus = 0
+                if bonus:
+                    _me_register_duration(resolved, "deploy_contribution_bonus", bonus, duration, gs.turn_number)
         elif et == "resurrect_from_dead_pool":
             revived = _me_resurrect_from_dead_pool(gs, owner, int(amount or 1), eff.get("value"), context)
             context.setdefault("revived", []).extend(revived)

@@ -7,12 +7,24 @@ from typing import List
 from typing import Tuple
 
 from .effects import run_effects
+from .rules import can_target_card
 
 # Minimal, UI-agnostic registry so we can wire abilities one by one.
 
 AbilityFn = Callable[[object, object], bool]  # (GameState, card) -> success
 
 REGISTRY: Dict[Tuple[str, int], AbilityFn] = {}
+
+
+def _owner_of(gs, card):
+    try:
+        if card in getattr(gs.p1, "board", []):
+            return gs.p1
+        if card in getattr(gs.p2, "board", []):
+            return gs.p2
+    except Exception:
+        pass
+    return None
 
 
 def registers(name: str, idx: int):
@@ -47,6 +59,21 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
 
     if targets is None:
         targets = []
+
+    source_owner = _owner_of(gs, card)
+    filtered_targets: List[Any] = []
+    for target in targets:
+        if target is None:
+            continue
+        if isinstance(target, tuple):
+            filtered_targets.append(target)
+            continue
+        target_owner = _owner_of(gs, target)
+        hostile = bool(source_owner and target_owner and target_owner is not source_owner)
+        if not can_target_card(gs, card, target, hostile=hostile):
+            return False
+        filtered_targets.append(target)
+    targets = filtered_targets
 
     if getattr(card, "ability_used_this_turn", False) and not getattr(ability, "passive", False):
         return False

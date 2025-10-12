@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+from gsgsim.abilities import use_ability
 from gsgsim.engine import start_of_turn
 from gsgsim.loader import build_cards
 from gsgsim.loader import find_squad_leader
@@ -51,6 +54,33 @@ def test_just_deployed_lock_blocks_spend_until_next_turn():
     end_of_turn(gs)
     start_of_turn(gs)
     assert not rules.cannot_spend_wind(gs, card)
+
+
+def test_squad_leader_protection_blocks_hostile_targets():
+    # gamerules.md:115 — SL may not be targeted while squad/basic goons defend
+    narc_cards = build_cards(load_deck_json("narc_deck_strict.json"), faction="NARC")
+    pcu_cards = build_cards(load_deck_json("pcu_deck_strict.json"), faction="PCU")
+
+    def _card(cards, name):
+        for card in cards:
+            if getattr(card, "name", "") == name:
+                return deepcopy(card)
+        raise AssertionError(f"card not found: {name}")
+
+    grim = _card(pcu_cards, "Grim")
+    protector = _card(pcu_cards, "Void Freak")
+    lokar = _card(narc_cards, "Lokar Simmons")
+    lurker = _card(narc_cards, "Dormex Lurker")
+
+    p1 = Player("PCU", board=[grim, protector], hand=[], deck=[], retired=[])
+    p2 = Player("NARC", board=[lokar, lurker], hand=[], deck=[], retired=[])
+    gs = GameState(p1=p1, p2=p2, turn_player=p2, phase="action", turn_number=1, rng=None)
+
+    result = use_ability(gs, lurker, 0, [grim])
+
+    assert result is False
+    assert grim in p1.board
+    assert getattr(grim, "wind", 0) < 4
 
 
 def _mk_game():
