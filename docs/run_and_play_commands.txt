@@ -4,21 +4,21 @@ Goon Squad Galaxy Simulator – Run & Command Reference
 Environment & Run Commands
 --------------------------
 - Basic launch (Rich UI by default):
-  - `python3 gsg_sim.py`
+  - `python gsg_sim.py`
 - Force the plain text terminal UI:
-  - `python3 gsg_sim.py --ui cli`
+  - `python gsg_sim.py --ui cli`
 - Auto-play with built-in AI (both sides):
-  - `python3 gsg_sim.py --ai both`
+  - `python gsg_sim.py --ai both`
   - Add `--auto` to suppress prompts and let the AI advance turns automatically.
 - Solo practice: let the AI handle Player 2 only:
-  - `python3 gsg_sim.py --ai p2`
+  - `python gsg_sim.py --ai p2`
 - Override faction labels displayed in the UI (useful when loading custom decks):
-  - `python3 gsg_sim.py --p1-faction PCU --p2-faction NARC`
+  - `python gsg_sim.py --p1-faction PCU --p2-faction NARC`
 - Cheat/debug helpers (unlock `kill` command, skip confirmations):
-  - `GSG_CHEATS=1 python3 gsg_sim.py --ui rich`
+  - `GSG_CHEATS=1 python gsg_sim.py --ui rich`
 - Continuous simulations without UI (e.g., for scripted tests):
-  - Drive the engine directly from python3:
-    ```python3
+  - Drive the engine directly from python:
+    ```python
     from gsgsim import init_game, start_of_turn, end_of_turn, deploy_from_hand, use_ability_cli
 
     gs = init_game(rng_seed=42)
@@ -84,7 +84,7 @@ Examples
 --------
 1. Quick human-vs-human Rich UI match:
    ```
-   python3 gsg_sim.py
+   python gsg_sim.py
    > d0 0 1
    > u0 0>0
    > end
@@ -92,7 +92,7 @@ Examples
 
 2. Rich UI, player runs PCU vs AI-controlled NARC:
    ```
-   python3 gsg_sim.py --ai p2 --p1-faction PCU --p2-faction NARC
+   python gsg_sim.py --ai p2 --p1-faction PCU --p2-faction NARC
    > d0
    > pay 1 p1:0
    > u0 0>0
@@ -101,12 +101,12 @@ Examples
 
 3. Terminal UI, automatic mirror match (for logs):
    ```
-   python3 gsg_sim.py --ui cli --ai both --auto --p1-faction PCU --p2-faction NARC
+   python gsg_sim.py --ui cli --ai both --auto --p1-faction PCU --p2-faction NARC
    ```
 
 4. Testing Meatjacker’s clone:
    ```
-   python3 gsg_sim.py --ui rich
+   python gsg_sim.py --ui rich
    > deadpool         # note the top card IDs
    > d2               # deploy Meatjacker (paying meat from the Dead Pool)
    > vb[2]            # inspect the freshly cloned ability list
@@ -114,7 +114,7 @@ Examples
 
 5. Bruut Enforcer unwind while controlling NARC:
    ```
-   python3 gsg_sim.py --ui rich --ai p2
+   python gsg_sim.py --ui rich --ai p2
    > d1               # deploy Bruut Enforcer (ensure SG requirements met)
    > pay 1 p1:0       # allies pay wind to unwind Bruut (ENABLE effect)
    ```
