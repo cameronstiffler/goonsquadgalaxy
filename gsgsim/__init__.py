@@ -4,6 +4,7 @@ from __future__ import annotations
 from .engine import deploy_from_hand
 from .engine import end_of_turn
 from .engine import init_game
+from .engine import pay_to_unwind
 from .engine import select_ui
 from .engine import start_of_turn
 from .engine import use_ability_cli
@@ -40,6 +41,7 @@ __all__ = [
     "destroy_if_needed",
     "init_game",
     "deploy_from_hand",
+    "pay_to_unwind",
     "use_ability_cli",
     "start_of_turn",
     "end_of_turn",

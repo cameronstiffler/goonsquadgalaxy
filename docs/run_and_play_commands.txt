@@ -1,0 +1,122 @@
+Goon Squad Galaxy Simulator – Run & Command Reference
+=====================================================
+
+Environment & Run Commands
+--------------------------
+- Basic launch (Rich UI by default):
+  - `python3 gsg_sim.py`
+- Force the plain text terminal UI:
+  - `python3 gsg_sim.py --ui cli`
+- Auto-play with built-in AI (both sides):
+  - `python3 gsg_sim.py --ai both`
+  - Add `--auto` to suppress prompts and let the AI advance turns automatically.
+- Solo practice: let the AI handle Player 2 only:
+  - `python3 gsg_sim.py --ai p2`
+- Override faction labels displayed in the UI (useful when loading custom decks):
+  - `python3 gsg_sim.py --p1-faction PCU --p2-faction NARC`
+- Cheat/debug helpers (unlock `kill` command, skip confirmations):
+  - `GSG_CHEATS=1 python3 gsg_sim.py --ui rich`
+- Continuous simulations without UI (e.g., for scripted tests):
+  - Drive the engine directly from python3:
+    ```python3
+    from gsgsim import init_game, start_of_turn, end_of_turn, deploy_from_hand, use_ability_cli
+
+    gs = init_game(rng_seed=42)
+    start_of_turn(gs)
+    deploy_from_hand(gs, gs.turn_player, 0)
+    use_ability_cli(gs, src_idx=0, abil_idx=0, target_spec="p2:0")
+    end_of_turn(gs)
+    ```
+- Run the unit tests (covers rules + the new Wave-B effect handlers):
+  - `pytest -q`
+
+Rich & CLI In-Game Commands
+---------------------------
+
+General
+~~~~~~~
+- `help` (alias `h`): Print the command banner again.
+- `quit`, `q`, or `exit`: Leave the simulator.
+- `end` or `e`: Finish the current turn (blocked if a “must use” ability is still pending).
+- `ai`: Let the AI finish the current player’s turn once; `ai p1` or `ai p2` targets a specific side.
+- `deadpool` (alias `dp`): Show cards currently in the shared Dead Pool with their icon tags.
+
+Deployment
+~~~~~~~~~~
+- `dN` or `d N`: Deploy hand card *N* (zero-based). Example: `d0`
+- `ddN`: Attempt a “double deploy” (deploy card N twice in one command if enough copies and wind are available).
+- Add paying contributors immediately after the deploy command:
+  - `d0 0 1 1` — deploy hand card 0, using board indexes 0 and 1 (card 1 pays twice) to cover the wind cost.
+- With decks that require gear/meat (e.g., Meatjacker), the simulator will prompt you to choose matching Dead Pool cards; the resources are automatically consumed and tracked so the deployed card can copy abilities later.
+
+Manual Wind Payments
+~~~~~~~~~~~~~~~~~~~~
+- `pay <amount> p1|p2:idx[,idx]`
+  - Spend wind manually from specific board positions.
+  - Example: `pay 2 p1:0,1` deducts 1 wind from P1’s board index 0 and 1 (lethal payments are still blocked unless the command is forced from scripts).
+  - Useful for abilities like Bruut Enforcer’s *ENABLE* effect (pay-to-unwind) or when a scenario card forces an out-of-turn cost.
+
+Abilities
+~~~~~~~~~
+- `u <src> <abil>`: Use ability `<abil>` from board card `<src>`.
+  - Example: `u0 1` — board index 0 uses its second ability.
+- Target shorthand:
+  - `uN A>targets` for hostile targets (automatically mapped to the opponent board).
+  - `uN A<targets` for friendly targets (current player board).
+  - Example: `u2 0>3 4` — card 2 uses ability 0 on enemy board indexes 3 and 4.
+- The engine now supports several Wave-B style effects automatically:
+  - Meatjacker *CLONE*: copies abilities from the mechanical card you burned from the Dead Pool when deploying. No extra UI input—deploy, then look at the abilities block.
+  - Bruut Enforcer *ENABLE*: after targeting fires, issue `pay` commands to push wind from allies onto Bruut and unwind him 1-for-1.
+  - Buzzkill *SENTRY MODE*: flagged targets build a temporary “cannot be targeted by enemy abilities” status until Buzzkill’s controller begins their next turn; you’ll see targeting blocked automatically.
+  - K-9.0 *SCAN FOR VULNERABILITY*: once active, any hostile ability that targets the chosen ally automatically adds an extra wind via the reaction handler (you’ll see the extra wind in the logs/UI).
+
+Inspection
+~~~~~~~~~~
+- `vh[N]`: Show full card detail for hand index N (e.g., `vh[0]`).
+- `vb[N]`: Inspect current player board card N.
+- `vo[N]`: Inspect opponent board card N.
+
+Cheats (when `GSG_CHEATS=1`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- `kill p1|p2 <idx>` or `k p1|p2 <idx>`: Immediately retire the specified board card. Example: `kill p2 0` nukes the opponent’s squad leader for quick scenario resets.
+
+Examples
+--------
+1. Quick human-vs-human Rich UI match:
+   ```
+   python3 gsg_sim.py
+   > d0 0 1
+   > u0 0>0
+   > end
+   ```
+
+2. Rich UI, player runs PCU vs AI-controlled NARC:
+   ```
+   python3 gsg_sim.py --ai p2 --p1-faction PCU --p2-faction NARC
+   > d0
+   > pay 1 p1:0
+   > u0 0>0
+   > ai          # let the NARC AI respond once
+   ```
+
+3. Terminal UI, automatic mirror match (for logs):
+   ```
+   python3 gsg_sim.py --ui cli --ai both --auto --p1-faction PCU --p2-faction NARC
+   ```
+
+4. Testing Meatjacker’s clone:
+   ```
+   python3 gsg_sim.py --ui rich
+   > deadpool         # note the top card IDs
+   > d2               # deploy Meatjacker (paying meat from the Dead Pool)
+   > vb[2]            # inspect the freshly cloned ability list
+   ```
+
+5. Bruut Enforcer unwind while controlling NARC:
+   ```
+   python3 gsg_sim.py --ui rich --ai p2
+   > d1               # deploy Bruut Enforcer (ensure SG requirements met)
+   > pay 1 p1:0       # allies pay wind to unwind Bruut (ENABLE effect)
+   ```
+
+Tip: Whenever you’re unsure about current shortcuts or turn flow, re-run `help` inside the UI; the banner reflects the latest command set and clearly shows deploy, target, and AI syntax.																		

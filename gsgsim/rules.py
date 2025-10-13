@@ -72,6 +72,20 @@ def destroy_if_needed(gs, card) -> bool:
         except Exception:
             pass
 
+    try:
+        copied = list(getattr(card, "_copied_abilities_from_dead_pool", []) or [])
+        if copied:
+            abilities = [ab for ab in getattr(card, "abilities", []) if ab not in copied]
+            card.abilities = abilities
+            delattr(card, "_copied_abilities_from_dead_pool")
+    except Exception:
+        pass
+    try:
+        if hasattr(card, "_deploy_dead_pool_sources"):
+            delattr(card, "_deploy_dead_pool_sources")
+    except Exception:
+        pass
+
     if not hasattr(gs, "dead_pool") or gs.dead_pool is None:
         gs.dead_pool = []
     gs.dead_pool.append(card)
@@ -162,6 +176,8 @@ def can_target_card(gs, source, target, *, hostile: bool) -> bool:
     if hostile:
         # cannot_be_targeted blocks hostile targeting entirely
         if has_status(target, "cannot_be_targeted"):
+            return False
+        if has_status(target, "cannot_be_targeted_enemy"):
             return False
         try:
             owner = None

@@ -274,10 +274,6 @@ def deploy_from_hand(
     wind_cost = getattr(card, "deploy_wind", 0)
     gear_cost = getattr(card, "deploy_gear", 0)
     meat_cost = getattr(card, "deploy_meat", 0)
-    if gear_cost or meat_cost:
-        # Not implemented in this build
-        print("could not pay wind")
-        return False
 
     if _has_squad_goon_duplicate(player, card):
         print("cannot deploy: squad goon of this type already in play")
@@ -288,11 +284,30 @@ def deploy_from_hand(
         print(reason or "cannot deploy: deployment requirements not met")
         return False
 
+    resource_cards: List[Any] = []
+    if gear_cost:
+        spent = _consume_dead_pool_for_cost(gs, int(gear_cost), "gear", chooser)
+        if spent is None:
+            _return_dead_pool_cards(gs, resource_cards)
+            print("insufficient gear resources in dead pool")
+            return False
+        resource_cards.extend(spent)
+    if meat_cost:
+        spent = _consume_dead_pool_for_cost(gs, int(meat_cost), "meat", chooser)
+        if spent is None:
+            _return_dead_pool_cards(gs, resource_cards)
+            print("insufficient meat resources in dead pool")
+            return False
+        resource_cards.extend(spent)
+
     # Pay wind
     if not distribute_wind(player, wind_cost, gs=gs, chooser=chooser, contributors=contributors):
+        _return_dead_pool_cards(gs, resource_cards)
         return False
     # Move card to board (wrap to allow runtime mutable attrs on frozen dataclasses)
     runtime = _wrap_runtime(card)
+    if resource_cards:
+        setattr(runtime, "_deploy_dead_pool_sources", list(resource_cards))
     player.board.append(runtime)
     player.hand.pop(hand_idx)
     runtime.wind = 0
@@ -312,6 +327,7 @@ def start_of_turn(gs: GameState) -> None:
         if not p.deck:
             print(f"{p.name} loses: deck empty at draw step!")
             setattr(gs, "loser", getattr(p, "name", "?"))
+            _cleanup_until_player_next_turn(gs)
             return
         draw(p, 1)
     # Clear new_this_turn and just_deployed on both players' boards
@@ -363,11 +379,26 @@ def start_of_turn(gs: GameState) -> None:
                 status[tag] = [t for t in arr if not (t.get("duration") == "next_turn" and t.get("turn_tag") == gs.turn_number - 1)]
                 if not status[tag]:
                     status.pop(tag)
+            # Remove until_player_next_turn tokens when owner start turn
+            for tag, arr in list(status.items()):
+                filtered = []
+                for token in arr:
+                    if token.get("duration") == "until_player_next_turn":
+                        token_owner = token.get("owner")
+                        if token_owner is gs.turn_player or (token_owner is not None and getattr(token_owner, "name", None) == getattr(gs.turn_player, "name", None)):
+                            continue
+                    filtered.append(token)
+                if filtered:
+                    status[tag] = filtered
+                else:
+                    status.pop(tag, None)
             if "marked" not in status and getattr(c, "marked", False):
                 try:
                     delattr(c, "marked")
                 except Exception:
                     c.marked = False
+
+    _cleanup_until_player_next_turn(gs)
 
 
 def _clear_turn_locks(gs):
@@ -489,6 +520,57 @@ def pay_cli(gs, amount: int, spec: str) -> None:
     print("pay ok" if ok else "pay failed")
 
 
+def pay_to_unwind(gs, target, contributions: List[Tuple[Any, int]]) -> bool:
+    owner = _me_owner_of(gs, target)
+    if owner is None:
+        return False
+    if target not in getattr(owner, "board", []):
+        return False
+    if owner is not getattr(gs, "turn_player", None):
+        return False
+    status_map = getattr(target, "status", {}) or {}
+    if not status_map.get("pay_to_unwind"):
+        return False
+
+    resolved: List[Tuple[Any, int]] = []
+    total = 0
+    for card, amount in contributions or []:
+        if amount is None:
+            continue
+        try:
+            amt = int(amount)
+        except Exception:
+            continue
+        if amt <= 0 or card not in getattr(owner, "board", []):
+            return False
+        if cannot_spend_wind(gs, card):
+            return False
+        resolved.append((card, amt))
+        total += amt
+    if total <= 0:
+        return False
+
+    before = [(card, int(getattr(card, "wind", 0) or 0)) for card, _ in resolved]
+    target_before = int(getattr(target, "wind", 0) or 0)
+
+    try:
+        for card, amt in resolved:
+            apply_wind(gs, card, amt)
+        apply_wind(gs, target, -total)
+    except Exception:
+        for card, wind in before:
+            try:
+                setattr(card, "wind", wind)
+            except Exception:
+                pass
+        try:
+            setattr(target, "wind", target_before)
+        except Exception:
+            pass
+        return False
+    return True
+
+
 # === canonical wind mutation and checks (rules-backed) ===
 def add_wind_and_check(gs, card, delta: int, *, hostile: bool = False) -> int:
     """Mutate wind by delta. KO and retire at >= 4. Return applied delta."""
@@ -558,6 +640,105 @@ def _resolve_deck_path(raw: str, root: Path) -> Path:
     if not path.is_absolute():
         path = root / path
     return path
+
+
+def _matches_dead_pool_kind(card, kind: str) -> bool:
+    token = (kind or "").strip().lower()
+    if token in ("biological", "meat"):
+        if token == "meat":
+            return bool(getattr(card, "biological", False) or getattr(card, "mechanical", False))
+        return bool(getattr(card, "biological", False))
+    if token in ("mechanical", "gear"):
+        return bool(getattr(card, "mechanical", False))
+    return True
+
+
+def _return_dead_pool_cards(gs, cards: List[Any]) -> None:
+    if not cards:
+        return
+    for card in cards:
+        getattr(gs, "dead_pool", []).append(card)
+        try:
+            if getattr(card, "biological", False):
+                gs.dead_pool_bio = int(getattr(gs, "dead_pool_bio", 0) or 0) + 1
+            if getattr(card, "mechanical", False):
+                gs.dead_pool_mech = int(getattr(gs, "dead_pool_mech", 0) or 0) + 1
+        except Exception:
+            pass
+
+
+def _cleanup_until_player_next_turn(gs) -> None:
+    owner = getattr(gs, "turn_player", None)
+    if owner is None:
+        return
+    for side in (getattr(gs, "p1", None), getattr(gs, "p2", None)):
+        if side is None:
+            continue
+        for card in getattr(side, "board", []):
+            status = getattr(card, "status", {}) or {}
+            changed = False
+            for tag, arr in list(status.items()):
+                new_tokens = []
+                for token in arr:
+                    if token.get("duration") == "until_player_next_turn":
+                        token_owner = token.get("owner")
+                        if token_owner is owner or (token_owner is not None and getattr(token_owner, "name", None) == getattr(owner, "name", None)):
+                            changed = True
+                            continue
+                    new_tokens.append(token)
+                if new_tokens:
+                    status[tag] = new_tokens
+                else:
+                    status.pop(tag, None)
+            if changed:
+                setattr(card, "status", status)
+
+
+def _consume_dead_pool_for_cost(gs, amount: int, kind: str, chooser: Optional[Chooser]) -> Optional[List[Any]]:
+    if amount <= 0:
+        return []
+    pool = [card for card in getattr(gs, "dead_pool", []) or [] if _matches_dead_pool_kind(card, kind)]
+    if len(pool) < amount:
+        return None
+
+    selected: List[Any] = []
+    if chooser is not None:
+        choice = chooser(
+            "select_dead_pool_cards",
+            {
+                "kind": kind,
+                "amount": amount,
+                "options": pool,
+            },
+        )
+        if isinstance(choice, list):
+            for card in choice:
+                if card in pool and card not in selected:
+                    selected.append(card)
+                if len(selected) >= amount:
+                    break
+        elif choice in pool:
+            selected.append(choice)
+    if len(selected) < amount:
+        for card in pool:
+            if card not in selected:
+                selected.append(card)
+            if len(selected) >= amount:
+                break
+    removed = []
+    for card in selected[:amount]:
+        removed.extend(_me_banish_from_dead_pool(gs, 1, kind))
+    if len(removed) < amount:
+        _return_dead_pool_cards(gs, removed)
+        return None
+    return removed
+
+
+def trigger_hostile_target_reaction(gs, source, target, amount: int) -> None:
+    if target is None or isinstance(target, tuple):
+        return
+    owner = _me_owner_of(gs, source)
+    _me_apply_alter_wind(gs, source, owner, [target], amount, _passive_chooser)
 
 
 def _expand_deck_cards(deck_obj: Dict[str, Any]) -> List[Card]:
@@ -821,7 +1002,14 @@ def _me_filter_by_tokens(gs, source, tokens: List[str], context: Optional[Dict[s
     return out
 
 
-def _me_register_duration(targets: Iterable[Any], tag: str, value: Any, duration: str, turn_number: Optional[int] = None):
+def _me_register_duration(
+    targets: Iterable[Any],
+    tag: str,
+    value: Any,
+    duration: str,
+    turn_number: Optional[int] = None,
+    owner: Optional[Any] = None,
+):
     for t in targets:
         if isinstance(t, tuple):  # markers like ('dead_pool',) or ('CHOOSE', …)
             continue
@@ -830,6 +1018,8 @@ def _me_register_duration(targets: Iterable[Any], tag: str, value: Any, duration
         token = {"value": value, "duration": duration}
         if duration == "next_turn" and turn_number is not None:
             token["turn_tag"] = turn_number
+        if owner is not None:
+            token["owner"] = owner
         arr.append(token)
 
 
@@ -896,6 +1086,41 @@ def _me_apply_destroy(gs, source, targets: List[Any]) -> None:
         destroy_if_needed(gs, t)
 
 
+def _me_copy_abilities_from_sources(target) -> None:
+    sources = list(getattr(target, "_deploy_dead_pool_sources", []) or [])
+    if not sources:
+        return
+    copied: List[Any] = list(getattr(target, "_copied_abilities_from_dead_pool", []))
+    base_list = list(getattr(target, "abilities", []) or [])
+    for source in sources:
+        for ability in getattr(source, "abilities", []) or []:
+            clone = copy.deepcopy(ability)
+            try:
+                setattr(clone, "_copied_from_card", getattr(source, "name", None))
+            except Exception:
+                pass
+            base_list.append(clone)
+            copied.append(clone)
+    target.abilities = base_list
+    target._copied_abilities_from_dead_pool = copied
+    try:
+        delattr(target, "_deploy_dead_pool_sources")
+    except Exception:
+        pass
+
+
+def _me_clear_copied_abilities(card) -> None:
+    copied = list(getattr(card, "_copied_abilities_from_dead_pool", []) or [])
+    if not copied:
+        return
+    abilities = [ab for ab in getattr(card, "abilities", []) if ab not in copied]
+    card.abilities = abilities
+    try:
+        delattr(card, "_copied_abilities_from_dead_pool")
+    except Exception:
+        pass
+
+
 def _me_apply_draw(gs, player, n: int):
     for _ in range(max(0, int(n))):
         if getattr(player, "deck", None):
@@ -916,21 +1141,37 @@ def _me_apply_search_deck(gs, player, chooser):
         player.deck.reverse()
 
 
-def _me_banish_from_dead_pool(gs, amount: int, kind: str) -> bool:
+def _me_banish_from_dead_pool(gs, amount: int, kind: str) -> List[Any]:
+    removed: List[Any] = []
     if amount <= 0:
+        return removed
+    kind = (kind or "").strip().lower()
+    pool = list(getattr(gs, "dead_pool", []) or [])
+
+    def _matches(card) -> bool:
+        if kind in ("biological", "meat"):
+            if kind == "meat":
+                return bool(getattr(card, "biological", False) or getattr(card, "mechanical", False))
+            return bool(getattr(card, "biological", False))
+        if kind in ("mechanical", "gear"):
+            return bool(getattr(card, "mechanical", False))
         return True
-    attr = None
-    if kind == "biological":
-        attr = "dead_pool_bio"
-    elif kind == "mechanical":
-        attr = "dead_pool_mech"
-    if not attr:
-        return True
-    current = int(getattr(gs, attr, 0) or 0)
-    if current < amount:
-        return False
-    setattr(gs, attr, current - amount)
-    return True
+
+    for card in pool:
+        if len(removed) >= amount:
+            break
+        if not _matches(card):
+            continue
+        getattr(gs, "dead_pool", []).remove(card)
+        try:
+            if getattr(card, "biological", False):
+                gs.dead_pool_bio = max(0, int(getattr(gs, "dead_pool_bio", 0) or 0) - 1)
+            if getattr(card, "mechanical", False):
+                gs.dead_pool_mech = max(0, int(getattr(gs, "dead_pool_mech", 0) or 0) - 1)
+        except Exception:
+            pass
+        removed.append(card)
+    return removed
 
 
 def _me_parse_csv(value: str) -> List[str]:
@@ -1130,39 +1371,54 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
         if et == "alter_wind":
             _me_apply_alter_wind(gs, source, owner, resolved, amount, chooser)
         elif et == "prevent_unwind":
-            _me_register_duration(resolved, "prevent_unwind", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "prevent_unwind", True, duration, gs.turn_number, owner)
         elif et == "disable_abilities":
-            _me_register_duration(resolved, "disable_abilities", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "disable_abilities", True, duration, gs.turn_number, owner)
         elif et == "disable_contribution":
-            _me_register_duration(resolved, "disable_contribution", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "disable_contribution", True, duration, gs.turn_number, owner)
         elif et == "destroy":
             _me_apply_destroy(gs, source, resolved)
         elif et == "retire_on_destroy":
-            _me_register_duration(resolved, "retire_on_destroy", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "retire_on_destroy", True, duration, gs.turn_number, owner)
         elif et == "return_to_hand_on_destroy":
-            _me_register_duration(resolved, "return_to_hand_on_destroy", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "return_to_hand_on_destroy", True, duration, gs.turn_number, owner)
         elif et == "grant_resist":
-            _me_register_duration(resolved, "resist", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "resist", True, duration, gs.turn_number, owner)
         elif et == "cannot_be_targeted":
-            _me_register_duration(resolved, "cannot_be_targeted", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "cannot_be_targeted", True, duration, gs.turn_number, owner)
         elif et == "must_be_destroyed_first":
-            _me_register_duration(resolved, "must_be_destroyed_first", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "must_be_destroyed_first", True, duration, gs.turn_number, owner)
         elif et == "search_deck":
             _me_apply_search_deck(gs, owner, chooser)
         elif et == "draw_cards":
             _me_apply_draw(gs, owner, int(amount or 1))
         elif et == "banish_from_dead_pool":
             kind = str(eff.get("value") or "").strip().lower()
-            _me_banish_from_dead_pool(gs, int(amount or 0), kind)
+            need = max(0, int(amount or 0))
+            removed = _me_banish_from_dead_pool(gs, need, kind)
+            if len(removed) < need:
+                # restore on failure
+                for card in removed:
+                    getattr(gs, "dead_pool", []).append(card)
+                    try:
+                        if getattr(card, "biological", False):
+                            gs.dead_pool_bio = int(getattr(gs, "dead_pool_bio", 0) or 0) + 1
+                        if getattr(card, "mechanical", False):
+                            gs.dead_pool_mech = int(getattr(gs, "dead_pool_mech", 0) or 0) + 1
+                    except Exception:
+                        pass
+                # If chooser exists, it can surface failure; skip effect
+                continue
+            context.setdefault("banished_dead_pool", []).extend(removed)
         elif et == "destroy_attacker_on_destroy":
             for t in resolved:
                 if isinstance(t, tuple):
                     continue
                 setattr(t, "_retaliate_on_destroy", True)
         elif et == "enable_double_use_against_target":
-            _me_register_duration(resolved, "double_use_against", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "double_use_against", True, duration, gs.turn_number, owner)
         elif et == "mark_target":
-            _me_register_duration(resolved, "marked", source, duration, gs.turn_number)
+            _me_register_duration(resolved, "marked", source, duration, gs.turn_number, owner)
             for t in resolved:
                 if isinstance(t, tuple):
                     continue
@@ -1171,15 +1427,22 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
                 except Exception:
                     pass
         elif et == "increase_damage_taken":
-            _me_register_duration(resolved, "increase_damage_taken", int(amount or 0), duration, gs.turn_number)
+            _me_register_duration(resolved, "increase_damage_taken", int(amount or 0), duration, gs.turn_number, owner)
         elif et == "reduce_cost_for_cards_against_marked":
-            _me_register_duration(resolved, "mark_cost_reduction", _me_parse_csv(eff.get("value", "")), duration, gs.turn_number)
+            _me_register_duration(
+                resolved,
+                "mark_cost_reduction",
+                _me_parse_csv(eff.get("value", "")),
+                duration,
+                gs.turn_number,
+                owner,
+            )
         elif et == "copy_and_cast_target_ability":
             _me_copy_and_cast(gs, owner, resolved, chooser)
         elif et == "conditional_cannot_be_targeted_by_negative_effects":
             _me_apply_conditional_protection(gs, owner, eff.get("value"))
         elif et == "enable_contribution":
-            _me_register_duration(resolved, "enable_contribution", source, duration, gs.turn_number)
+            _me_register_duration(resolved, "enable_contribution", source, duration, gs.turn_number, owner)
         elif et == "destroy_self_if_target_destroyed":
             for t in resolved:
                 if isinstance(t, tuple):
@@ -1191,13 +1454,33 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
                     token["turn_tag"] = gs.turn_number
                 arr.append(token)
         elif et == "grant_followup_on_destroy":
-            _me_register_duration([source], "grant_followup_on_destroy", {"amount": int(amount or 0), "target": tokens}, duration, gs.turn_number)
+            _me_register_duration(
+                [source],
+                "grant_followup_on_destroy",
+                {"amount": int(amount or 0), "target": tokens},
+                duration,
+                gs.turn_number,
+                owner,
+            )
         elif et == "must_attack":
-            _me_register_duration(resolved, "must_attack", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "must_attack", True, duration, gs.turn_number, owner)
         elif et == "no_unwind":
-            _me_register_duration(resolved, "no_unwind_flag", True, duration, gs.turn_number)
+            _me_register_duration(resolved, "no_unwind_flag", True, duration, gs.turn_number, owner)
         elif et == "redirect_damage":
-            _me_register_duration(resolved, "redirect_damage", source, duration, gs.turn_number)
+            _me_register_duration(resolved, "redirect_damage", source, duration, gs.turn_number, owner)
+        elif et == "copy_abilities_on_deploy_from_deadpool":
+            for t in resolved:
+                if isinstance(t, tuple):
+                    continue
+                _me_copy_abilities_from_sources(t)
+        elif et == "pay_to_unwind":
+            _me_register_duration(resolved, "pay_to_unwind", {"source": source}, "persistent", gs.turn_number, owner)
+        elif et == "grant_cannot_be_targeted_by_enemy_abilities":
+            _me_register_duration(resolved, "cannot_be_targeted_enemy", True, duration, gs.turn_number, owner)
+        elif et == "alter_wind_when_targeted_by_ability":
+            amt = int(amount or 0)
+            payload = {"amount": amt, "hostile_only": True}
+            _me_register_duration(resolved, "hostile_target_reaction", payload, duration, gs.turn_number, owner)
         elif et == "alter_deploy_wind":
             if amount:
                 try:
@@ -1205,7 +1488,7 @@ def run_machine_effects(gs, source, ability: Dict[str, Any], chooser: Callable, 
                 except Exception:
                     bonus = 0
                 if bonus:
-                    _me_register_duration(resolved, "deploy_contribution_bonus", bonus, duration, gs.turn_number)
+                    _me_register_duration(resolved, "deploy_contribution_bonus", bonus, duration, gs.turn_number, owner)
         elif et == "resurrect_from_dead_pool":
             revived = _me_resurrect_from_dead_pool(gs, owner, int(amount or 1), eff.get("value"), context)
             context.setdefault("revived", []).extend(revived)

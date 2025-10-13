@@ -75,6 +75,8 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
         filtered_targets.append(target)
     targets = filtered_targets
 
+    _trigger_target_reactions(gs, card, targets)
+
     if getattr(card, "ability_used_this_turn", False) and not getattr(ability, "passive", False):
         return False
 
@@ -259,6 +261,31 @@ def _mark_target(gs, card):
     # Placeholder: toggle a "marked" flag so tests/UI can verify
     setattr(card, "marked", True)
     return True
+
+
+def _trigger_target_reactions(gs, card, targets):
+    if not targets:
+        return
+    owner = _owner_of(gs, card)
+    for target in targets:
+        if target is None or isinstance(target, tuple):
+            continue
+        status_map = getattr(target, "status", {}) or {}
+        reactions = status_map.get("hostile_target_reaction", [])
+        if not reactions:
+            continue
+        target_owner = _owner_of(gs, target)
+        hostile = bool(owner and target_owner and owner is not target_owner)
+        for token in reactions:
+            value = token.get("value", {}) or {}
+            amount = int(value.get("amount", 0) or 0)
+            if amount == 0:
+                continue
+            if value.get("hostile_only") and not hostile:
+                continue
+            from .engine import trigger_hostile_target_reaction
+
+            trigger_hostile_target_reaction(gs, card, target, amount)
 
 
 @registers("Hover Shield", 0)

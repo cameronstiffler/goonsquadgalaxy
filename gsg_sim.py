@@ -16,6 +16,7 @@ from gsgsim import find_squad_leader
 from gsgsim import init_game
 from gsgsim import load_deck_json
 from gsgsim import parse_rank
+from gsgsim import pay_to_unwind
 from gsgsim import select_ui
 from gsgsim import start_of_turn
 from gsgsim import use_ability_cli
@@ -37,6 +38,7 @@ __all__ = [
     "destroy_if_needed",
     "init_game",
     "deploy_from_hand",
+    "pay_to_unwind",
     "use_ability_cli",
     "start_of_turn",
     "end_of_turn",
