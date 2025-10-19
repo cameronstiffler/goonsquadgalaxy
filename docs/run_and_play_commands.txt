@@ -21,7 +21,7 @@ Environment & Run Commands
     ```python
     from gsgsim import init_game, start_of_turn, end_of_turn, deploy_from_hand, use_ability_cli
 
-    gs = init_game(rng_seed=42)
+    gs = init_game(rng_seed=42) 
     start_of_turn(gs)
     deploy_from_hand(gs, gs.turn_player, 0)
     use_ability_cli(gs, src_idx=0, abil_idx=0, target_spec="p2:0")
