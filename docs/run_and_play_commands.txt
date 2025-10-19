@@ -4,7 +4,7 @@ Goon Squad Galaxy Simulator – Run & Command Reference
 Environment & Run Commands
 --------------------------
 - Basic launch (Rich UI by default):
-  - `python gsg_sim.py`
+  - `python gsg_sim.py`   
 - Force the plain text terminal UI:
   - `python gsg_sim.py --ui cli`
 - Auto-play with built-in AI (both sides):
