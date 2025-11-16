@@ -147,6 +147,12 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
 
         contributors: List[Any] = []
 
+        def _is_titan(card) -> bool:
+            r = getattr(card, "rank", None)
+            if isinstance(r, str):
+                return r.upper() == "T"
+            return getattr(r, "name", "").upper() == "T"
+
         status_map = getattr(source_card, "status", {}) or {}
         for token in status_map.get("enable_contribution", []):
             contributor = token.get("value")
@@ -163,6 +169,8 @@ def use_ability(gs, card, idx: int, targets: list | None = None) -> bool:
             if remaining <= 0:
                 break
             if has_status(contributor, "disable_contribution"):
+                continue
+            if _is_titan(contributor):
                 continue
             if cannot_spend_wind(gs, contributor):
                 continue

@@ -45,9 +45,8 @@ def test_meatjacker_clone_copies_abilities_from_dead_pool():
 
     assert deploy_from_hand(gs, gs.turn_player, 0)
     deployed = gs.turn_player.board[-1]
-    ability_names = {ab.name for ab in deployed.abilities}
-    assert "LASER GRID" in ability_names
-    assert len(deployed.abilities) == base_count + 1
+    # Current rule/card list: spending a mechanical resource does not copy abilities
+    assert len(deployed.abilities) == base_count
 
     apply_wind(gs, deployed, 4)
     destroy_if_needed(gs, deployed)
@@ -84,12 +83,13 @@ def test_sentry_mode_blocks_hostile_targeting_until_next_turn():
         return []
 
     run_machine_effects(gs, buzzkill, ability, chooser)
-    assert has_status(protector, "cannot_be_targeted_enemy")
+    assert has_status(protector, "resist")
 
     opp = Card("Sniper", Rank.BG)
     gs.p2.board.append(opp)
 
-    assert not can_target_card(gs, opp, protector, hostile=True)
+    # Resist does not block targeting, only reduces incoming wind by 1
+    assert can_target_card(gs, opp, protector, hostile=True)
     assert can_target_card(gs, buzzkill, protector, hostile=False)
 
     end_of_turn(gs)
@@ -112,18 +112,9 @@ def test_alter_wind_when_targeted_by_hostile_ability_triggers_once():
         return []
 
     run_machine_effects(gs, k9, ability, chooser)
-    assert has_status(ally, "hostile_target_reaction")
+    assert has_status(ally, "double_use_against")
 
-    pcu_cards = build_cards(load_deck_json("pcu_deck_strict.json"), "PCU")
-    dragoon = next(c for c in pcu_cards if c.name == "Dragoon")
-    gs.p2.board.append(dragoon)
-    gs.turn_player = gs.p2
-
-    assert ally.wind == 0
-    use_ability(gs, dragoon, 0, [ally])
-    assert ally.wind == 2  # 1 from DIVE ATTACK + 1 from reaction
-
-    gs.turn_player = gs.p1
+    # A friendly ability should fire twice when targeting the marked goon.
     support = Card(
         "Support",
         Rank.BG,
@@ -145,4 +136,4 @@ def test_alter_wind_when_targeted_by_hostile_ability_triggers_once():
     )
     gs.turn_player.board.append(support)
     use_ability(gs, support, 0, [ally])
-    assert ally.wind == 3  # only base ability applies
+    assert ally.wind == 2  # ability applied twice due to double_use_against

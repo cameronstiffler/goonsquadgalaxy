@@ -60,7 +60,7 @@
         {
           "type": "requires_rank_in_play",
           "side": "self",
-          "count": 2,
+          "count": 1,
           "value": "SG"
         }
       ],

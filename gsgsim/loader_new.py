@@ -247,20 +247,20 @@ def expand_duplicates(deck: Deck) -> List[Goon]:
 def assert_legal_deck(
     deck: Deck,
     *,
-    required_size: Optional[int] = 60,
+    min_size: Optional[int] = 52,
     max_copies: int = 4,
     titan_rank: Rank = "T",
     titan_max: int = 1,
 ) -> None:
     """
     Enforce deckbuilding rules:
-      - (optional) exact size check
+      - (optional) minimum size check
       - Max 4 copies of any card, except Titans (rank 'T') = 1
     """
-    if required_size is not None:
+    if min_size is not None:
         n = deck_size(deck)
-        if n != required_size:
-            raise ValueError(f"Deck must contain {required_size} cards (got {n})")
+        if n < min_size:
+            raise ValueError(f"Deck must contain at least {min_size} cards (got {n})")
 
     counts: Dict[str, int] = {}
     for g in deck.goons:

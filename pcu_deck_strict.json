@@ -3,84 +3,9 @@
   "faction": "PCU",
   "goons": [
     {
-      "name": "Dragoon",
-      "rank": "BG",
-      "duplicates": 4,
-      "faction": "PCU",
-      "deploy_cost": {
-        "wind": 6,
-        "gear": 0,
-        "meat": 0
-      },
-      "biological": false,
-      "mechanical": true,
-      "resist": false,
-      "no_unwind": false,
-      "deploy_requirements": [
-        {
-          "type": "requires_card_in_play",
-          "card_name": "Krax",
-          "side": "self"
-        }
-      ],
-      "abilities": [
-        {
-          "name": "DIVE ATTACK",
-          "cost": {
-            "wind": 1,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": false,
-          "must_use": false,
-          "text": "Add 1 wind to target Goon",
-          "effects": [
-            {
-              "effect_type": "alter_wind",
-              "amount": 1,
-              "target": [
-                "any"
-              ],
-              "duration": "instant"
-            }
-          ]
-        },
-        {
-          "name": "LOYAL MOUNT",
-          "cost": {
-            "wind": 0,
-            "gear": 0,
-            "meat": 0
-          },
-          "passive": true,
-          "must_use": false,
-          "text": "Some or all wind applied to Krax as damage from enemy Goon ability may be applied to Dragoon instead. If Krax is destroyed, Dragoon is destroyed.",
-          "effects": [
-            {
-              "effect_type": "redirect_damage",
-              "target": [
-                "card_name:Krax"
-              ],
-              "duration": "persistent"
-            },
-            {
-              "effect_type": "destroy_self_if_target_destroyed",
-              "target": [
-                "card_name:Krax"
-              ],
-              "duration": "persistent"
-            }
-          ]
-        }
-      ],
-      "notes": [],
-      "image_url_full": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/dragoon.png",
-      "image_url_mini": "https://cameronstiffler.github.io/goonsquadgalaxy/card-images/pcu/mini/dragoon.jpg"
-    },
-    {
       "name": "Mutt",
       "rank": "BG",
-      "duplicates": 4,
+      "duplicates": 3,
       "faction": "PCU",
       "deploy_cost": {
         "wind": 4,
@@ -642,7 +567,7 @@
     {
       "name": "Kriegsgheist",
       "rank": "BG",
-      "duplicates": 3,
+      "duplicates": 2,
       "faction": "PCU",
       "deploy_cost": {
         "wind": 0,
@@ -833,7 +758,7 @@
     {
       "name": "Nives",
       "rank": "BG",
-      "duplicates": 3,
+      "duplicates": 2,
       "faction": "PCU",
       "deploy_cost": {
         "wind": 4,
@@ -1077,15 +1002,15 @@
       "deploy_requirements": [],
       "abilities": [
         {
-          "name": "RAISE",
+          "name": "RESURRECT",
           "cost": {
-            "wind": 1,
+            "wind": 2,
             "gear": 0,
             "meat": 1
           },
           "passive": false,
           "must_use": false,
-          "text": "Goon with meat from Dead Pool enters play under player's control.",
+          "text": "Take control of a Biological Goon from Dead Pool. Treat the resurrected Goon as if it were deployed this turn.",
           "effects": [
             {
               "effect_type": "resurrect_from_dead_pool",
@@ -1115,13 +1040,13 @@
         {
           "name": "RECYCLE",
           "cost": {
-            "wind": 1,
+            "wind": 2,
             "gear": 1,
             "meat": 0
           },
           "passive": false,
           "must_use": false,
-          "text": "Goon with gear from Dead Pool enters play under player's control.",
+          "text": "Take control of a Mechanical Goon from Dead Pool. Treat the recycled Goon as if it were deployed this turn.",
           "effects": [
             {
               "effect_type": "resurrect_from_dead_pool",

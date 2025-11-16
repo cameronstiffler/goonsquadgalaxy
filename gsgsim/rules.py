@@ -41,12 +41,12 @@ def apply_wind(gs, card, delta: int) -> int:
 
 
 def apply_wind_with_resist(gs, card, delta: int, *, hostile: bool) -> int:
-    """Hostile +1 is reduced by 1 if the card has resist; otherwise apply as-is."""
+    """Hostile wind is reduced by 1 (to a floor of 0) if the card has resist."""
     d = int(delta or 0)
     if hostile and d > 0:
         has_resist = bool(getattr(card, "resist", False) or "resist" in getattr(card, "traits", set()) or "resist" in getattr(card, "icons", []))
-        if has_resist and d == 1:
-            d = 0
+        if has_resist:
+            d = max(0, d - 1)
     return apply_wind(gs, card, d)
 
 
@@ -71,6 +71,9 @@ def destroy_if_needed(gs, card) -> bool:
             owner.retired.append(card)
         except Exception:
             pass
+    rank = getattr(card, "rank", "")
+    rank_name = getattr(getattr(card, "rank", None), "name", "")
+    is_titan = str(rank).strip().upper() in ("T", "TITAN") or str(rank_name).strip().upper() == "T"
 
     try:
         copied = list(getattr(card, "_copied_abilities_from_dead_pool", []) or [])
@@ -86,16 +89,17 @@ def destroy_if_needed(gs, card) -> bool:
     except Exception:
         pass
 
-    if not hasattr(gs, "dead_pool") or gs.dead_pool is None:
-        gs.dead_pool = []
-    gs.dead_pool.append(card)
-    try:
-        if getattr(card, "biological", False):
-            gs.dead_pool_bio = int(getattr(gs, "dead_pool_bio", 0) or 0) + 1
-        if getattr(card, "mechanical", False):
-            gs.dead_pool_mech = int(getattr(gs, "dead_pool_mech", 0) or 0) + 1
-    except Exception:
-        pass
+    if not is_titan:
+        if not hasattr(gs, "dead_pool") or gs.dead_pool is None:
+            gs.dead_pool = []
+        gs.dead_pool.append(card)
+        try:
+            if getattr(card, "biological", False):
+                gs.dead_pool_bio = int(getattr(gs, "dead_pool_bio", 0) or 0) + 1
+            if getattr(card, "mechanical", False):
+                gs.dead_pool_mech = int(getattr(gs, "dead_pool_mech", 0) or 0) + 1
+        except Exception:
+            pass
 
     dependents = []
     try:
@@ -159,8 +163,14 @@ def destroy_if_needed(gs, card) -> bool:
 
 
 def cannot_spend_wind(gs, card) -> bool:
-    """Lock rule: newly deployed or explicit cannot_spend_wind status."""
-    return bool(getattr(card, "just_deployed", False) or getattr(card, "new_this_turn", False) or getattr(card, "cannot_spend_wind", False))
+    """Lock rule: newly deployed, explicit lock, or Titan restriction."""
+    rank = getattr(card, "rank", None)
+    is_titan = False
+    if isinstance(rank, str):
+        is_titan = rank.upper() == "T"
+    else:
+        is_titan = getattr(rank, "name", "").upper() == "T"
+    return bool(getattr(card, "just_deployed", False) or getattr(card, "new_this_turn", False) or getattr(card, "cannot_spend_wind", False) or is_titan)
 
 
 def _rank_str(x) -> str:

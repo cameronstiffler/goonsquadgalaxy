@@ -185,13 +185,47 @@ def _try_aggressive_ability(gs, me) -> bool:
 def _deploy_best_available(gs, me) -> None:
     from .engine import deploy_from_hand
 
+    try:
+        from .engine import _check_deploy_requirements  # type: ignore
+        from .engine import _has_squad_goon_duplicate  # type: ignore
+    except Exception:
+        _check_deploy_requirements = None  # type: ignore
+        _has_squad_goon_duplicate = None  # type: ignore
+
     hand = list(getattr(me, "hand", []))
     if not hand:
         return
 
-    indexed = list(enumerate(hand))
-    indexed.sort(key=lambda pair: (_card_cost(pair[1]), pair[0]))
-    for original_idx, _card in indexed:
+    playable: List[tuple[int, Any]] = []
+    blocked: List[tuple[int, Any]] = []
+    for original_idx, card in enumerate(hand):
+        ok = True
+        if callable(_check_deploy_requirements):
+            try:
+                ok, _ = _check_deploy_requirements(gs, me, card)  # type: ignore[arg-type]
+            except Exception:
+                ok = True
+
+        if ok and callable(_has_squad_goon_duplicate):
+            try:
+                if _has_squad_goon_duplicate(me, card):  # type: ignore[arg-type]
+                    ok = False
+            except Exception:
+                ok = False
+
+        target = playable if ok else blocked
+        target.append((original_idx, card))
+
+    def _sort_key(pair):
+        return (_card_cost(pair[1]), pair[0])
+
+    playable.sort(key=_sort_key)
+    blocked.sort(key=_sort_key)
+
+    if not playable:
+        return
+
+    for original_idx, _card in playable:
         try:
             if deploy_from_hand(gs, me, original_idx):
                 break

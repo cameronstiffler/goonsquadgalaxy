@@ -62,12 +62,21 @@ def _eligible_with_caps(player: Player) -> List[Tuple[int, Card, int]]:
     out: List[Tuple[int, Card, int]] = []
     from .rules import has_status
 
+    def _is_titan(card: Card) -> bool:
+        r = getattr(card, "rank", None)
+        if isinstance(r, str):
+            return r.upper() == "T"
+        return getattr(r, "name", "").upper() == "T"
+
     for idx, c in enumerate(getattr(player, "board", [])):
         if getattr(c, "new_this_turn", False):
             setattr(c, "_why_ineligible", "new this turn")
             continue
         if has_status(c, "disable_contribution"):
             setattr(c, "_why_ineligible", "disable_contribution")
+            continue
+        if _is_titan(c):
+            setattr(c, "_why_ineligible", "titan_cannot_pay")
             continue
         wind = getattr(c, "wind", 0)
         cap = max(0, 4 - wind)
@@ -94,11 +103,20 @@ def _auto_plan(eligible: List[Tuple[int, Card, int]], total_cost: int) -> Option
         name = getattr(r, "name", "")
         return str(name).upper() == "SL"
 
+    def is_titan(card: Card) -> bool:
+        r = getattr(card, "rank", None)
+        if isinstance(r, str):
+            return r.upper() == "T"
+        name = getattr(r, "name", "")
+        return str(name).upper() == "T"
+
     # Split eligible into non-SL and SL
     non_sl: List[Tuple[int, Card, int]] = []
     sls: List[Tuple[int, Card, int]] = []
     for tup in eligible:
         (i, c, cap) = tup
+        if is_titan(c):
+            continue
         (sls if is_sl(c) else non_sl).append(tup)
 
     plan: List[Tuple[int, int]] = []
@@ -148,12 +166,16 @@ def manual_pay(player, total: int, plan: list[tuple[int, int]], allow_lethal_sl:
         r = getattr(card, "rank", "")
         return (isinstance(r, str) and r.upper() == "SL") or (hasattr(r, "name") and str(r.name).upper() == "SL")
 
+    def is_titan(card):
+        r = getattr(card, "rank", "")
+        return (isinstance(r, str) and r.upper() == "T") or (hasattr(r, "name") and str(r.name).upper() == "T")
+
     try:
         for idx, amt in plan:
             if amt <= 0 or not (0 <= idx < len(board)):
                 raise RuntimeError("bad plan")
             c = board[idx]
-            if has_status(c, "disable_contribution"):
+            if has_status(c, "disable_contribution") or is_titan(c):
                 raise RuntimeError("disable_contribution")
             if is_sl(c) and getattr(c, "wind", 0) + amt > 3 and not allow_lethal_sl:
                 raise RuntimeError("lethal")
@@ -190,6 +212,12 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, con
             return r.upper() == "SL"
         return getattr(r, "name", "").upper() == "SL"
 
+    def is_titan(card):
+        r = getattr(card, "rank", None)
+        if isinstance(r, str):
+            return r.upper() == "T"
+        return getattr(r, "name", "").upper() == "T"
+
     board = list(getattr(player, "board", []))
 
     from .rules import has_status
@@ -199,8 +227,15 @@ def distribute_wind(player, total_cost, *, auto=True, gs=None, chooser=None, con
             return 0
         if has_status(card, "disable_contribution"):
             return 0
+        if is_titan(card):
+            return 0
         w = int(getattr(card, "wind", 0) or 0)
-        return max(0, 4 - w)
+        cap = max(0, 4 - w)
+        # Auto mode for AI: avoid self-KO; never pay past 3 wind when the active controller is AI.
+        ai_turn = bool(auto and gs is not None and getattr(getattr(gs, "turn_player", None), "controller", "human") == "ai")
+        if ai_turn:
+            cap = min(cap, max(0, 3 - w))
+        return cap
 
     if contributors:
         plan_map: Dict[int, int] = {}
